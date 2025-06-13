@@ -6,15 +6,31 @@ SESSION="vibecode"
 # Use current directory if POCKET_IDE_PROJECT_DIR not set
 PROJECT_DIR="${POCKET_IDE_PROJECT_DIR:-$(pwd)}"
 
-# Colors for output
-if [[ -t 1 ]] && [[ -n "$TERM" ]] && which tput &>/dev/null; then
-    bold="$(tput bold)"
-    normal="$(tput sgr0)"
-    red="$(tput setaf 1)"
-    green="$(tput setaf 2)"
-    yellow="$(tput setaf 3)"
-    blue="$(tput setaf 4)"
+# Fix terminal environment
+export TERM="${TERM:-xterm-256color}"
+
+# More robust color detection
+if [[ -t 1 ]] && [[ -n "$TERM" ]] && command -v tput >/dev/null 2>&1; then
+    # Check if terminal actually supports colors
+    ncolors=$(tput colors 2>/dev/null || echo 0)
+    if [[ -n "$ncolors" ]] && [[ "$ncolors" -ge 8 ]]; then
+        bold="$(tput bold 2>/dev/null || echo '')"
+        normal="$(tput sgr0 2>/dev/null || echo '')"
+        red="$(tput setaf 1 2>/dev/null || echo '')"
+        green="$(tput setaf 2 2>/dev/null || echo '')"
+        yellow="$(tput setaf 3 2>/dev/null || echo '')"
+        blue="$(tput setaf 4 2>/dev/null || echo '')"
+    else
+        # No color support
+        bold=""
+        normal=""
+        red=""
+        green=""
+        yellow=""
+        blue=""
+    fi
 else
+    # No color support
     bold=""
     normal=""
     red=""
@@ -30,47 +46,56 @@ check_prerequisites() {
     echo "🔍 Checking prerequisites..."
     
     if ! command -v tmux &> /dev/null; then
-        echo -e "${red}❌ tmux is not installed${normal}"
+        echo "${red}❌ tmux is not installed${normal}"
         echo "   Run: brew install tmux"
         missing=1
     else
-        echo -e "${green}✓ tmux found${normal}"
+        echo "${green}✓ tmux found${normal}"
     fi
     
     if ! command -v claude &> /dev/null; then
-        echo -e "${yellow}⚠️  Claude Code not found in PATH${normal}"
+        echo "${yellow}⚠️  Claude Code not found in PATH${normal}"
         echo "   Make sure Claude Code is installed and in your PATH"
         echo "   You can still continue, but you'll need to start Claude manually"
     else
-        echo -e "${green}✓ Claude Code found${normal}"
+        echo "${green}✓ Claude Code found${normal}"
     fi
     
     # Show project directory
-    echo -e "${blue}📁 Project directory: $PROJECT_DIR${normal}"
+    echo "${blue}📁 Project directory: $PROJECT_DIR${normal}"
     
     if [ ! -d "$PROJECT_DIR" ]; then
-        echo -e "${yellow}📁 Creating project directory: $PROJECT_DIR${normal}"
+        echo "${yellow}📁 Creating project directory: $PROJECT_DIR${normal}"
         mkdir -p "$PROJECT_DIR"
     fi
     
     if [ $missing -eq 1 ]; then
-        echo -e "\n${red}Please install missing prerequisites before continuing.${normal}"
+        echo ""
+        echo "${red}Please install missing prerequisites before continuing.${normal}"
         exit 1
     fi
 }
 
 # Create or attach to session
 start_session() {
+    # Clean any stray escape sequences
+    printf '\033[0m' 2>/dev/null || true
+    
     # Check if session exists
     if tmux has-session -t $SESSION 2>/dev/null; then
-        echo -e "\n${green}📱 Pocket IDE session already running!${normal}"
+        echo ""
+        echo "${green}📱 Pocket IDE session already running!${normal}"
         echo "Attaching to existing session..."
-        tmux attach-session -t $SESSION
+        exec tmux attach-session -t $SESSION
     else
-        echo -e "\n${green}🚀 Creating new Pocket IDE session...${normal}"
-        echo -e "   Working directory: ${blue}$PROJECT_DIR${normal}"
+        echo ""
+        echo "${green}🚀 Creating new Pocket IDE session...${normal}"
+        echo "   Working directory: ${blue}$PROJECT_DIR${normal}"
         
-        # Create new session with custom layout IN THE CURRENT/SPECIFIED DIRECTORY
+        # Kill any zombie sessions first
+        tmux kill-session -t $SESSION 2>/dev/null || true
+        
+        # Create new session with custom layout
         tmux new-session -d -s $SESSION -n 'main' -c "$PROJECT_DIR"
         
         # Split window horizontally (left: Claude, right: terminal)
@@ -87,7 +112,7 @@ start_session() {
         fi
         
         # Set up right pane (already in project directory)
-        tmux send-keys -t $SESSION:0.1 'clear && echo "🎯 Terminal ready in: $(pwd)"' Enter
+        tmux send-keys -t $SESSION:0.1 "clear && echo '🎯 Terminal ready in: $PROJECT_DIR'" Enter
         
         # Create a second window for monitoring/logs
         tmux new-window -t $SESSION:1 -n 'monitor' -c "$PROJECT_DIR"
@@ -95,47 +120,57 @@ start_session() {
         # Switch back to main window
         tmux select-window -t $SESSION:0
         
+        # Small delay to ensure everything is set up
+        sleep 0.5
+        
         # Attach to session
-        echo -e "${green}✅ Pocket IDE session created!${normal}"
-        echo -e "\nSession layout:"
+        echo "${green}✅ Pocket IDE session created!${normal}"
+        echo ""
+        echo "Session layout:"
         echo "  Window 0 'main':"
         echo "    - Left pane:  Claude Code"
         echo "    - Right pane: Project terminal"
         echo "  Window 1 'monitor':"
         echo "    - For logs, monitoring, etc."
-        echo -e "\nUseful tmux commands:"
+        echo ""
+        echo "Useful tmux commands:"
         echo "  - Switch panes:   Ctrl+b → arrow keys"
         echo "  - Switch windows: Ctrl+b → 0/1"
         echo "  - Detach:         Ctrl+b → d"
-        echo -e "\nAttaching to session..."
-        sleep 2
-        tmux attach-session -t $SESSION
+        echo ""
+        echo "Attaching to session..."
+        sleep 1
+        exec tmux attach-session -t $SESSION
     fi
 }
 
 # Show status
 show_status() {
-    echo -e "\n${yellow}📊 Pocket IDE Status${normal}"
+    echo ""
+    echo "${yellow}📊 Pocket IDE Status${normal}"
     
     if tmux has-session -t $SESSION 2>/dev/null; then
-        echo -e "${green}✓ Session is running${normal}"
-        echo -e "\nWindows:"
+        echo "${green}✓ Session is running${normal}"
+        echo ""
+        echo "Windows:"
         tmux list-windows -t $SESSION
-        echo -e "\nTo attach: ${green}tmux attach -t $SESSION${normal}"
+        echo ""
+        echo "To attach: ${green}tmux attach -t $SESSION${normal}"
     else
-        echo -e "${red}✗ No session found${normal}"
-        echo -e "\nTo start: ${green}$0 start${normal}"
+        echo "${red}✗ No session found${normal}"
+        echo ""
+        echo "To start: ${green}$0 start${normal}"
     fi
 }
 
 # Kill session
 kill_session() {
     if tmux has-session -t $SESSION 2>/dev/null; then
-        echo -e "${yellow}⚠️  Killing Pocket IDE session...${normal}"
+        echo "${yellow}⚠️  Killing Pocket IDE session...${normal}"
         tmux kill-session -t $SESSION
-        echo -e "${green}✓ Session terminated${normal}"
+        echo "${green}✓ Session terminated${normal}"
     else
-        echo -e "${yellow}No session to kill${normal}"
+        echo "${yellow}No session to kill${normal}"
     fi
 }
 
