@@ -181,6 +181,10 @@ mkdir -p "$POCKET_IDE_DIR/config"
 # Download enhanced scripts
 echo "Downloading enhanced scripts..."
 
+# Download the diagnostic script
+curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/pocket-diagnose.sh -o "$POCKET_IDE_DIR/bin/pocket-diagnose.sh" 2>/dev/null || echo "[!] Could not download diagnostic script"
+chmod +x "$POCKET_IDE_DIR/bin/pocket-diagnose.sh" 2>/dev/null || true
+
 # Create the ultra-short command wrapper
 cat > "$POCKET_IDE_DIR/bin/pocket-quick.sh" << 'EOF'
 #!/bin/bash
@@ -188,72 +192,129 @@ cat > "$POCKET_IDE_DIR/bin/pocket-quick.sh" << 'EOF'
 
 SESSION="vibecode"
 
-# Auto-create session if needed
-if ! tmux has-session -t $SESSION 2>/dev/null; then
-    $HOME/.pocket-ide/start-pocket-ide.sh > /dev/null 2>&1
-fi
+# Function to check if pane exists
+pane_exists() {
+    tmux list-panes -t "$1" >/dev/null 2>&1
+}
+
+# Function to ensure session structure
+ensure_session_structure() {
+    if ! tmux has-session -t $SESSION 2>/dev/null; then
+        $HOME/.pocket-ide/start-pocket-ide.sh > /dev/null 2>&1
+        return
+    fi
+    
+    # Check if we have the expected panes
+    local pane_count=$(tmux list-panes -t $SESSION:0 2>/dev/null | wc -l || echo 0)
+    if [ "$pane_count" -lt 2 ]; then
+        # Try to repair
+        if [ "$pane_count" -eq 1 ]; then
+            tmux split-window -h -t $SESSION:0 -c "$HOME/projects" 2>/dev/null || true
+            tmux resize-pane -t $SESSION:0.0 -x 60% 2>/dev/null || true
+        fi
+    fi
+}
+
+# Ensure session exists with proper structure
+ensure_session_structure
 
 # Command shortcuts
 case "${1:-d}" in
     # Status commands
     s)  # Status
-        tmux capture-pane -t $SESSION:0.0 -p | tail -20
+        if pane_exists "$SESSION:0.0"; then
+            tmux capture-pane -t $SESSION:0.0 -p | tail -20
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     l)  # Last 10 lines
-        tmux capture-pane -t $SESSION:0.0 -p | tail -10
+        if pane_exists "$SESSION:0.0"; then
+            tmux capture-pane -t $SESSION:0.0 -p | tail -10
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     ll) # Last 50 lines
-        tmux capture-pane -t $SESSION:0.0 -p | tail -50
+        if pane_exists "$SESSION:0.0"; then
+            tmux capture-pane -t $SESSION:0.0 -p | tail -50
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     
     # Action commands
     r)  # Run
         shift
-        tmux send-keys -t $SESSION:0.0 "$*" Enter
-        echo "[OK] Sent: $*"
+        if pane_exists "$SESSION:0.0"; then
+            tmux send-keys -t $SESSION:0.0 "$*" Enter
+            echo "[OK] Sent: $*"
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     c)  # Clear
-        tmux send-keys -t $SESSION:0.0 "clear" Enter
+        if pane_exists "$SESSION:0.0"; then
+            tmux send-keys -t $SESSION:0.0 "clear" Enter
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     k)  # Kill current process
-        tmux send-keys -t $SESSION:0.0 C-c
-        echo "[!] Interrupted"
+        if pane_exists "$SESSION:0.0"; then
+            tmux send-keys -t $SESSION:0.0 C-c
+            echo "[!] Interrupted"
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     rs) # Restart Claude
-        tmux send-keys -t $SESSION:0.0 C-c
-        sleep 0.5
-        tmux send-keys -t $SESSION:0.0 "claude" Enter
-        echo "[OK] Restarted Claude"
+        if pane_exists "$SESSION:0.0"; then
+            tmux send-keys -t $SESSION:0.0 C-c
+            sleep 0.5
+            tmux send-keys -t $SESSION:0.0 "claude" Enter
+            echo "[OK] Restarted Claude"
+        else
+            echo "[!] Claude pane not found. Run 'fix' to repair."
+        fi
         ;;
     
     # Navigation - Fixed for tmux nesting
     1)  # Claude pane
-        if [ -n "$TMUX" ]; then
-            # Already in tmux, just switch pane
-            tmux select-pane -t $SESSION:0.0
+        if pane_exists "$SESSION:0.0"; then
+            if [ -n "$TMUX" ]; then
+                # Already in tmux, just switch pane
+                tmux select-pane -t $SESSION:0.0
+            else
+                # Not in tmux, attach to session
+                tmux select-pane -t $SESSION:0.0
+                tmux attach-session -t $SESSION
+            fi
         else
-            # Not in tmux, attach to session
-            tmux select-pane -t $SESSION:0.0
-            tmux attach-session -t $SESSION
+            echo "[!] Claude pane not found. Run 'fix' to repair."
         fi
         ;;
     2)  # Terminal pane
-        if [ -n "$TMUX" ]; then
-            # Already in tmux, just switch pane
-            tmux select-pane -t $SESSION:0.1
+        if pane_exists "$SESSION:0.1"; then
+            if [ -n "$TMUX" ]; then
+                # Already in tmux, just switch pane
+                tmux select-pane -t $SESSION:0.1
+            else
+                # Not in tmux, attach to session
+                tmux select-pane -t $SESSION:0.1
+                tmux attach-session -t $SESSION
+            fi
         else
-            # Not in tmux, attach to session
-            tmux select-pane -t $SESSION:0.1
-            tmux attach-session -t $SESSION
+            echo "[!] Terminal pane not found. Run 'fix' to repair."
         fi
         ;;
     3)  # Monitor window
         if [ -n "$TMUX" ]; then
             # Already in tmux, just switch window
-            tmux select-window -t $SESSION:1
+            tmux select-window -t $SESSION:1 2>/dev/null || echo "[!] Monitor window not found"
         else
             # Not in tmux, attach to session
-            tmux select-window -t $SESSION:1
+            tmux select-window -t $SESSION:1 2>/dev/null || echo "[!] Monitor window not found"
             tmux attach-session -t $SESSION
         fi
         ;;
@@ -267,7 +328,7 @@ case "${1:-d}" in
         fi
         ;;
     w)  # List windows
-        tmux list-windows -t $SESSION
+        tmux list-windows -t $SESSION 2>/dev/null || echo "[!] No session found"
         ;;
     
     # Dashboard view
@@ -275,25 +336,55 @@ case "${1:-d}" in
         echo "POCKET IDE DASHBOARD"
         echo "==================="
         echo ""
-        echo "Claude Status:"
-        if tmux capture-pane -t $SESSION:0.0 -p 2>/dev/null | tail -1 | grep -q "claude>"; then
-            echo "   [OK] Ready for input"
-        else
-            echo "   [...] Working"
-            echo ""
-            echo "Last output:"
-            tmux capture-pane -t $SESSION:0.0 -p | tail -3 | sed 's/^/   /'
+        
+        if ! tmux has-session -t $SESSION 2>/dev/null; then
+            echo "[!] No session found. Run 'pocket-ide start' to create."
+            exit 1
         fi
+        
+        echo "Claude Status:"
+        if pane_exists "$SESSION:0.0"; then
+            if tmux capture-pane -t $SESSION:0.0 -p 2>/dev/null | tail -1 | grep -q "claude>"; then
+                echo "   [OK] Ready for input"
+            else
+                echo "   [...] Working"
+                echo ""
+                echo "Last output:"
+                tmux capture-pane -t $SESSION:0.0 -p | tail -3 | sed 's/^/   /'
+            fi
+        else
+            echo "   [!] Claude pane missing"
+        fi
+        
         echo ""
         echo "Current Directory:"
-        tmux capture-pane -t $SESSION:0.1 -p | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//' | sed 's/^/   /'
+        if pane_exists "$SESSION:0.1"; then
+            tmux capture-pane -t $SESSION:0.1 -p | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//' | sed 's/^/   /' || echo "   [unknown]"
+        else
+            echo "   [!] Terminal pane missing"
+        fi
+        
         echo ""
         echo "Quick Commands:"
         echo "   s=status  r=run  c=clear  k=kill"
         echo "   1=claude  2=term  3=monitor  p=next-pane"
+        echo "   fix=diagnose  rs=restart"
         if [ -n "$TMUX" ]; then
             echo ""
             echo "   [You're in tmux - pane switching ready]"
+        fi
+        ;;
+    
+    # Diagnostic/Fix command
+    fix|diag|diagnose)
+        if [ -x "$HOME/.pocket-ide/bin/pocket-diagnose.sh" ]; then
+            $HOME/.pocket-ide/bin/pocket-diagnose.sh
+        else
+            echo "[!] Diagnostic script not found"
+            echo "Quick fix attempt..."
+            tmux kill-session -t $SESSION 2>/dev/null
+            $HOME/.pocket-ide/start-pocket-ide.sh
+            echo "[OK] Session recreated. Try your commands again!"
         fi
         ;;
     
@@ -306,7 +397,7 @@ case "${1:-d}" in
         echo "l  - last 10      c - clear         2 - terminal"
         echo "ll - last 50      k - kill process  3 - monitor"
         echo "d  - dashboard    rs - restart      p - next pane"
-        echo "                                    w - list windows"
+        echo "fix - diagnose                     w - list windows"
         echo ""
         echo "Example: r 'create a hello world'"
         echo ""
@@ -315,6 +406,8 @@ case "${1:-d}" in
         else
             echo "TIP: Run 'pocket' first to attach to the session."
         fi
+        echo ""
+        echo "Session broken? Run 'fix' to diagnose and repair."
         ;;
     
     # Default to dashboard
@@ -383,6 +476,7 @@ alias d='~/.pocket-ide/bin/pocket-quick.sh d'
 alias h='~/.pocket-ide/bin/pocket-quick.sh h'
 alias p='~/.pocket-ide/bin/pocket-quick.sh p'
 alias w='~/.pocket-ide/bin/pocket-quick.sh w'
+alias fix='~/.pocket-ide/bin/pocket-quick.sh fix'
 
 # Number shortcuts for pane switching
 alias 1='~/.pocket-ide/bin/pocket-quick.sh 1'
@@ -426,7 +520,7 @@ echo ""
 echo "${bold}Ultra-short commands now available:${normal}"
 echo "   ${bold}s${normal} = status     ${bold}r${normal} = run command"
 echo "   ${bold}d${normal} = dashboard  ${bold}h${normal} = help"
-echo "   ${bold}p${normal} = next pane  ${bold}1/2/3${normal} = specific pane"
+echo "   ${bold}fix${normal} = diagnose & repair session"
 echo ""
 echo "${yellow}Quick Test:${normal}"
 echo "Reload your shell and try: ${bold}d${normal}"
