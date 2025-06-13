@@ -60,7 +60,9 @@ if [ "$PANE_COUNT" -lt 2 ]; then
     # If only one pane, split it
     if [ "$PANE_COUNT" -eq 1 ]; then
         echo "Creating missing terminal pane..."
-        tmux split-window -h -t $SESSION:0 -c "$HOME/projects"
+        # Use current directory or home
+        local work_dir="${PWD:-$HOME}"
+        tmux split-window -h -t $SESSION:0 -c "$work_dir"
         tmux resize-pane -t $SESSION:0.0 -x 60%
         
         # Check if Claude is running in pane 0

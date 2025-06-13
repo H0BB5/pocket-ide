@@ -14,6 +14,7 @@ This gives you:
 - ✅ Local network access (connect from phone while at home)
 - ✅ Basic commands: `pocket status`, `pocket run 'command'`
 - ✅ Persistent tmux sessions
+- ✅ **Works in YOUR current directory** (no hardcoded paths!)
 
 ### Step 2: Enable Remote Access (2 minutes)
 
@@ -30,6 +31,25 @@ This adds:
 - 📱 Better mobile experience
 - 🔧 Auto-repair with `fix` command
 
+## 📁 Working Directory
+
+**Pocket IDE always uses YOUR current directory!** 
+
+```bash
+cd ~/my-awesome-project
+pocket-ide start      # Creates session in ~/my-awesome-project
+
+cd ~/another-project  
+pocket-ide start      # If session exists, keeps using original directory
+```
+
+To work on a different project:
+```bash
+tmux kill-session -t vibecode    # End current session
+cd ~/new-project                 # Go to new project
+pocket-ide start                 # Start fresh in new directory
+```
+
 ## 📱 Mobile Setup
 
 After installation:
@@ -45,7 +65,7 @@ After installation:
 3. **Start coding!**
    ```bash
    pocket    # Attach to session
-   d         # Show dashboard
+   d         # Show dashboard (includes current directory)
    r "create a web app"  # Run command
    ```
 
@@ -53,22 +73,24 @@ After installation:
 
 ### After Basic Install
 | Command | What it does |
-|---------|--------------|
-| `pocket-ide start` | Start/attach to session |
+|---------|------------|
+| `pocket-ide start` | Start/attach to session (in current directory) |
 | `pocket status` | Check Claude status |
 | `pocket run 'cmd'` | Send command to Claude |
 
 ### After Tailscale Upgrade (Ultra-Short)
 | Command | What it does | Example |
-|---------|--------------|---------|
+|---------|--------------|------|
 | `s` | Show status | Just type `s` |
 | `r` | Run command | `r "build a game"` |
-| `d` | Dashboard | See everything |
+| `d` | Dashboard (shows current dir) | See everything |
 | `c` | Clear screen | Clean up |
 | `k` | Kill process | Stop Claude (smart detection) |
 | `1` | Go to Claude | Switch panes (from terminal) |
 | `2` | Go to terminal | Switch panes |
 | `p` | Next pane | Cycle through |
+| `pwd` | Show working directory | Check where you are |
+| `cd` | Change directory in terminal | `cd ../other-project` |
 | `fix` | Diagnose & repair | Fix broken sessions |
 | `keys` | tmux key reference | When shortcuts don't work |
 
@@ -109,6 +131,13 @@ fix    # Diagnose and auto-repair
 - Just use pane switching commands instead
 - Or exit tmux first with `Ctrl+b d`
 
+### Want to work on a different project?
+```bash
+tmux kill-session -t vibecode    # End current session
+cd ~/new-project                 # Navigate to new project
+pocket-ide start                 # Start fresh session there
+```
+
 ### Can't connect from phone?
 1. Check SSH is enabled: System Preferences → Sharing → Remote Login
 2. If using Tailscale, make sure it's running on both devices
@@ -128,7 +157,7 @@ Pocket IDE lets you run Claude Code on your Mac and control it from your phone. 
 - Checking progress while away
 - Starting long-running tasks remotely
 
-Your development environment stays persistent - start a task on desktop, check it from your phone, come back to see it completed.
+Your development environment stays persistent in whatever directory you started it - start a task on desktop, check it from your phone, come back to see it completed.
 
 ## 📚 Advanced Guides
 

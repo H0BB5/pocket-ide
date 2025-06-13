@@ -207,9 +207,10 @@ ensure_session_structure() {
     # Check if we have the expected panes
     local pane_count=$(tmux list-panes -t $SESSION:0 2>/dev/null | wc -l || echo 0)
     if [ "$pane_count" -lt 2 ]; then
-        # Try to repair
+        # Try to repair - use current directory or home
         if [ "$pane_count" -eq 1 ]; then
-            tmux split-window -h -t $SESSION:0 -c "$HOME/projects" 2>/dev/null || true
+            local work_dir="${PWD:-$HOME}"
+            tmux split-window -h -t $SESSION:0 -c "$work_dir" 2>/dev/null || true
             tmux resize-pane -t $SESSION:0.0 -x 60% 2>/dev/null || true
         fi
     fi
@@ -262,8 +263,14 @@ case "${1:-d}" in
         ;;
     k)  # Kill current process
         if pane_exists "$SESSION:0.0"; then
-            tmux send-keys -t $SESSION:0.0 C-c
-            echo "[!] Interrupted"
+            # Check if Claude is actually running something
+            last_line=$(tmux capture-pane -t $SESSION:0.0 -p | tail -1)
+            if [[ "$last_line" == *"claude>"* ]]; then
+                echo "[i] Claude is idle (nothing to interrupt)"
+            else
+                tmux send-keys -t $SESSION:0.0 C-c
+                echo "[!] Interrupted"
+            fi
         else
             echo "[!] Claude pane not found. Run 'fix' to repair."
         fi
@@ -331,6 +338,34 @@ case "${1:-d}" in
         tmux list-windows -t $SESSION 2>/dev/null || echo "[!] No session found"
         ;;
     
+    # Show current directory
+    pwd)
+        if pane_exists "$SESSION:0.1"; then
+            echo "Terminal pane directory:"
+            tmux send-keys -t $SESSION:0.1 'pwd' Enter
+            sleep 0.2
+            tmux capture-pane -t $SESSION:0.1 -p | tail -2 | head -1
+        else
+            echo "[!] Terminal pane not found"
+        fi
+        ;;
+    
+    # Change directory in terminal pane
+    cd)
+        shift
+        if pane_exists "$SESSION:0.1"; then
+            if [ -n "$1" ]; then
+                tmux send-keys -t $SESSION:0.1 "cd $*" Enter
+                echo "[OK] Changed directory to: $*"
+            else
+                tmux send-keys -t $SESSION:0.1 "cd" Enter
+                echo "[OK] Changed to home directory"
+            fi
+        else
+            echo "[!] Terminal pane not found"
+        fi
+        ;;
+    
     # Dashboard view
     d)  # Dashboard
         echo "POCKET IDE DASHBOARD"
@@ -359,7 +394,14 @@ case "${1:-d}" in
         echo ""
         echo "Current Directory:"
         if pane_exists "$SESSION:0.1"; then
-            tmux capture-pane -t $SESSION:0.1 -p | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//' | sed 's/^/   /' || echo "   [unknown]"
+            # Try to get the actual pwd from the pane
+            local term_content=$(tmux capture-pane -t $SESSION:0.1 -p | tail -20)
+            local pwd_line=$(echo "$term_content" | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//'
+            if [ -n "$pwd_line" ]; then
+                echo "   $pwd_line"
+            else
+                echo "   [unknown - use 'pwd' to check]"
+            fi
         else
             echo "   [!] Terminal pane missing"
         fi
@@ -398,6 +440,7 @@ case "${1:-d}" in
         echo "ll - last 50      k - kill process  3 - monitor"
         echo "d  - dashboard    rs - restart      p - next pane"
         echo "fix - diagnose                     w - list windows"
+        echo "pwd - show dir    cd - change dir"
         echo ""
         echo "Example: r 'create a hello world'"
         echo ""
