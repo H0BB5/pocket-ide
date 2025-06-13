@@ -1,0 +1,197 @@
+#!/bin/bash
+
+# Get the directory where pocket was started from
+START_DIR="$(pwd)"
+
+# Session and configuration
+SESSION_NAME="pocket-ide"
+CONFIG_DIR="$HOME/.pocket-ide"
+CONFIG_FILE="$CONFIG_DIR/config"
+
+# Create config directory if it doesn't exist
+mkdir -p "$CONFIG_DIR"
+
+# Store the start directory in a temp file for the session
+echo "$START_DIR" > "$CONFIG_DIR/start_dir"
+
+# Function to check if session exists
+session_exists() {
+    tmux has-session -t "$SESSION_NAME" 2>/dev/null
+}
+
+# Function to create a new session
+create_session() {
+    echo "🚀 Creating new Pocket IDE session..."
+    
+    # Create the session with the main window in the directory where pocket was started
+    tmux new-session -d -s "$SESSION_NAME" -n main -c "$START_DIR"
+    
+    # Split the main window horizontally
+    tmux split-window -h -t "$SESSION_NAME:main" -c "$START_DIR"
+    
+    # Set pane titles
+    tmux select-pane -t "$SESSION_NAME:main.0" -T "Claude Code"
+    tmux select-pane -t "$SESSION_NAME:main.1" -T "Project Terminal"
+    
+    # Create monitor window
+    tmux new-window -t "$SESSION_NAME" -n monitor -c "$START_DIR"
+    
+    # Set up the Claude Code pane (left)
+    tmux send-keys -t "$SESSION_NAME:main.0" "# Claude Code Terminal" C-m
+    tmux send-keys -t "$SESSION_NAME:main.0" "# Use 'cc' command here" C-m
+    tmux send-keys -t "$SESSION_NAME:main.0" "clear" C-m
+    
+    # Set up the Project Terminal pane (right) - keep it in the start directory
+    tmux send-keys -t "$SESSION_NAME:main.1" "# Project Terminal" C-m
+    tmux send-keys -t "$SESSION_NAME:main.1" "clear" C-m
+    
+    # Set up monitor window
+    tmux send-keys -t "$SESSION_NAME:monitor" "# Logs and monitoring" C-m
+    tmux send-keys -t "$SESSION_NAME:monitor" "clear" C-m
+    
+    # Switch back to main window
+    tmux select-window -t "$SESSION_NAME:main"
+    tmux select-pane -t "$SESSION_NAME:main.1"
+    
+    echo "✅ Pocket IDE session created!"
+}
+
+# Function to show dashboard
+show_dashboard() {
+    clear
+    echo "POCKET IDE DASHBOARD"
+    echo "==================="
+    echo ""
+    
+    # Check Claude pane
+    echo "Claude Status:"
+    if tmux list-panes -t "$SESSION_NAME:main" -F "#{pane_index}" 2>/dev/null | grep -q "0"; then
+        echo "  ✓ Claude Code pane active"
+    else
+        echo "  [!] Claude pane missing"
+    fi
+    echo ""
+    
+    # Show current directory
+    echo "Current Directory:"
+    if [ -f "$CONFIG_DIR/start_dir" ]; then
+        echo "  $(cat "$CONFIG_DIR/start_dir")"
+    else
+        echo "  [!] Directory info missing"
+    fi
+    echo ""
+    
+    # Quick commands
+    echo "Quick Commands:"
+    echo "  s=status  r=run  c=clear  k=kill"
+    echo "  1=claude  2=term  z=zoom  x=close"
+    echo "  fix=diagnose  rs=restart"
+    echo ""
+    
+    if tmux list-sessions 2>/dev/null | grep -q "$SESSION_NAME"; then
+        echo "[You're in tmux - pane switching ready]"
+    else
+        echo "[No active session - run 'pocket start']"
+    fi
+}
+
+# Function to fix terminal issues
+fix_terminal() {
+    # Reset terminal to fix color code issues
+    reset
+    clear
+    # Ensure we're in the correct directory
+    if [ -f "$CONFIG_DIR/start_dir" ]; then
+        cd "$(cat "$CONFIG_DIR/start_dir")"
+    fi
+}
+
+# Main script logic
+case "${1:-start}" in
+    start)
+        if session_exists; then
+            echo "📎 Attaching to existing Pocket IDE session..."
+            fix_terminal
+            tmux attach-session -t "$SESSION_NAME"
+        else
+            echo "🔍 Checking prerequisites..."
+            
+            # Check for tmux
+            if ! command -v tmux &> /dev/null; then
+                echo "❌ tmux not found. Please install tmux first."
+                exit 1
+            fi
+            echo "✓ tmux found"
+            
+            # Check for Claude Code (cc)
+            if ! command -v cc &> /dev/null; then
+                echo "⚠️  Claude Code (cc) not found."
+                echo "   You can still use Pocket IDE, but you'll need to start Claude manually."
+                echo "   Download from: https://claude.ai/download"
+            else
+                echo "✓ Claude Code found"
+            fi
+            
+            create_session
+            fix_terminal
+            tmux attach-session -t "$SESSION_NAME"
+        fi
+        ;;
+    
+    kill)
+        if session_exists; then
+            tmux kill-session -t "$SESSION_NAME"
+            echo "💀 Pocket IDE session terminated"
+            rm -f "$CONFIG_DIR/start_dir"
+        else
+            echo "No active Pocket IDE session found"
+        fi
+        ;;
+    
+    d|dashboard)
+        show_dashboard
+        ;;
+    
+    fix)
+        fix_terminal
+        echo "✅ Terminal reset completed"
+        if [ -f "$CONFIG_DIR/start_dir" ]; then
+            echo "Working directory: $(cat "$CONFIG_DIR/start_dir")"
+        fi
+        ;;
+    
+    status)
+        if session_exists; then
+            echo "✅ Pocket IDE session is active"
+            tmux list-windows -t "$SESSION_NAME"
+        else
+            echo "❌ No active Pocket IDE session"
+        fi
+        ;;
+    
+    help)
+        echo "Pocket IDE - Integrated Development Environment"
+        echo ""
+        echo "Usage: pocket [command]"
+        echo ""
+        echo "Commands:"
+        echo "  start     Start or attach to Pocket IDE session (default)"
+        echo "  kill      Terminate the Pocket IDE session"
+        echo "  status    Show session status"
+        echo "  d         Show dashboard"
+        echo "  fix       Fix terminal issues"
+        echo "  help      Show this help message"
+        echo ""
+        echo "Keyboard shortcuts (in tmux):"
+        echo "  Ctrl+b → ← ↑ ↓   Navigate panes"
+        echo "  Ctrl+b z          Zoom/unzoom pane"
+        echo "  Ctrl+b d          Detach session"
+        echo "  Ctrl+b 0-1        Switch windows"
+        ;;
+    
+    *)
+        echo "Unknown command: $1"
+        echo "Use 'pocket help' for usage information"
+        exit 1
+        ;;
+esac
