@@ -20,7 +20,7 @@ ensure_session_structure() {
     if [ "$pane_count" -lt 2 ]; then
         # Try to repair - use current directory or home
         if [ "$pane_count" -eq 1 ]; then
-            local work_dir="${PWD:-$HOME}"
+            work_dir="${PWD:-$HOME}"
             tmux split-window -h -t $SESSION:0 -c "$work_dir" 2>/dev/null || true
             tmux resize-pane -t $SESSION:0.0 -x 60% 2>/dev/null || true
         fi
@@ -206,8 +206,8 @@ case "${1:-d}" in
         echo "Current Directory:"
         if pane_exists "$SESSION:0.1"; then
             # Try to get the actual pwd from the pane
-            local term_content=$(tmux capture-pane -t $SESSION:0.1 -p | tail -20)
-            local pwd_line=$(echo "$term_content" | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//'
+            term_content=$(tmux capture-pane -t $SESSION:0.1 -p | tail -20)
+            pwd_line=$(echo "$term_content" | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//')
             if [ -n "$pwd_line" ]; then
                 echo "   $pwd_line"
             else
