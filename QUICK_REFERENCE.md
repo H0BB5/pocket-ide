@@ -25,6 +25,7 @@ p    # Next pane (cycle)
 c    # Clear screen
 k    # Kill/stop current task
 rs   # Restart Claude
+fix  # Diagnose & repair session
 ```
 
 ## 💡 Common Workflows
@@ -49,7 +50,20 @@ rs                   # Restart Claude
 r "try again"        # New command
 ```
 
+### Session broken?
+```bash
+fix                  # Auto-diagnose and repair
+# Or nuclear option:
+tmux kill-session -t vibecode
+pocket-ide start
+```
+
 ## 🔧 Fix Common Issues
+
+**"can't find pane" errors**
+```bash
+fix   # This will diagnose and repair
+```
 
 **"sessions should be nested..."**
 - You're already in tmux!
@@ -76,6 +90,7 @@ w     # List windows
    - `run` → `r `
    - `status` → `s`
    - `dash` → `d`
+   - `fix` → `fix`
 
 2. **Quick reconnect:**
    - Save host in Termius favorites
@@ -86,5 +101,11 @@ w     # List windows
    - Use landscape mode
    - Enable vibrant colors
 
+4. **Auto-repair on connect:**
+   - Add to Termius "Run Command": `d`
+   - Shows dashboard immediately
+
 ---
 Remember: Less typing = more coding! 🚀
+
+**Something broken?** Just type `fix` 🔧
