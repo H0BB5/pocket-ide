@@ -28,6 +28,7 @@ This adds:
 - ⚡ Ultra-short commands: `s`, `r`, `d` (instead of typing long commands)
 - 🔐 Secure encrypted connection
 - 📱 Better mobile experience
+- 🔧 Auto-repair with `fix` command
 
 ## 📱 Mobile Setup
 
@@ -68,8 +69,15 @@ After installation:
 | `1` | Go to Claude | Switch panes |
 | `2` | Go to terminal | Switch panes |
 | `p` | Next pane | Cycle through |
+| `fix` | Diagnose & repair | Fix broken sessions |
 
 ## 🔧 Troubleshooting
+
+### "can't find pane" errors
+Your tmux session structure is broken. Run:
+```bash
+fix    # Diagnose and auto-repair
+```
 
 ### "sessions should be nested with care"
 This happens when trying to attach while already in tmux. Use:
@@ -84,6 +92,13 @@ Download Claude Code from: https://claude.ai/download
 1. Check SSH is enabled: System Preferences → Sharing → Remote Login
 2. If using Tailscale, make sure it's running on both devices
 3. Try: `ssh username@hostname` to test connection
+
+### Something really broken?
+Nuclear option - full reset:
+```bash
+tmux kill-session -t vibecode
+pocket-ide start
+```
 
 ## 🎯 What is Pocket IDE?
 
