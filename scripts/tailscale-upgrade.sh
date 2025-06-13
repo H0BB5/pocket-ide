@@ -4,16 +4,41 @@
 
 set -e
 
-echo "🚀 Pocket IDE Tailscale Upgrade"
-echo "=============================="
-echo ""
+# Better color support detection and setup
+if [[ -t 1 ]] && [[ -n "$TERM" ]] && which tput &>/dev/null; then
+    # Terminal supports colors
+    ncolors=$(tput colors)
+    if [[ -n "$ncolors" ]] && [[ "$ncolors" -ge 8 ]]; then
+        bold="$(tput bold)"
+        normal="$(tput sgr0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+    else
+        # No color support
+        bold=""
+        normal=""
+        red=""
+        green=""
+        yellow=""
+        blue=""
+    fi
+else
+    # No color support
+    bold=""
+    normal=""
+    red=""
+    green=""
+    yellow=""
+    blue=""
+fi
 
-# Colors
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Simple banner without Unicode
+echo ""
+echo "${bold}Pocket IDE Tailscale Upgrade${normal}"
+echo "============================"
+echo ""
 
 # Function to check if command exists
 command_exists() {
@@ -38,42 +63,43 @@ check_tailscale_running() {
     fi
 }
 
-echo "🔍 Checking Tailscale installation..."
+echo "Checking Tailscale installation..."
+echo ""
 
 # Step 1: Check if Tailscale is properly installed and running
 if ! check_tailscale_running; then
-    echo -e "${YELLOW}⚠️  Tailscale is not running${NC}"
+    echo "${yellow}! Tailscale is not running${normal}"
     
     # Check if Tailscale CLI is installed but not the app
     if command_exists tailscale && ! check_tailscale_app; then
-        echo -e "${YELLOW}Found Tailscale CLI but not the GUI app${NC}"
+        echo "${yellow}Found Tailscale CLI but not the GUI app${normal}"
         echo "On macOS, you need the Tailscale app for the service to run."
         echo ""
-        echo -e "${BLUE}Installing Tailscale app...${NC}"
+        echo "${blue}Installing Tailscale app...${normal}"
         
         if command_exists brew; then
             brew install --cask tailscale || {
-                echo -e "${RED}Failed to install Tailscale${NC}"
+                echo "${red}Failed to install Tailscale${normal}"
                 echo "Please install manually from: https://tailscale.com/download"
                 exit 1
             }
         else
-            echo -e "${RED}Homebrew not found${NC}"
+            echo "${red}Homebrew not found${normal}"
             echo "Please install Tailscale from: https://tailscale.com/download"
             exit 1
         fi
     elif ! command_exists tailscale; then
         # No Tailscale at all
-        echo -e "${YELLOW}Tailscale not found${NC}"
+        echo "${yellow}Tailscale not found${normal}"
         echo ""
-        echo -e "${BLUE}Installing Tailscale...${NC}"
+        echo "${blue}Installing Tailscale...${normal}"
         
         if command_exists brew; then
             # Install both CLI and GUI
             brew install tailscale
             brew install --cask tailscale
         else
-            echo -e "${RED}Homebrew not found${NC}"
+            echo "${red}Homebrew not found${normal}"
             echo "Please install Tailscale from: https://tailscale.com/download"
             exit 1
         fi
@@ -81,22 +107,22 @@ if ! check_tailscale_running; then
     
     # Launch Tailscale app
     echo ""
-    echo -e "${BLUE}Launching Tailscale app...${NC}"
+    echo "${blue}Launching Tailscale app...${normal}"
     open -a Tailscale 2>/dev/null || {
-        echo -e "${RED}Could not launch Tailscale app${NC}"
+        echo "${red}Could not launch Tailscale app${normal}"
         echo "Please open Tailscale manually from Applications"
         exit 1
     }
     
     echo ""
-    echo -e "${YELLOW}👆 IMPORTANT: Tailscale Setup Required${NC}"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "${bold}${yellow}IMPORTANT: Tailscale Setup Required${normal}"
+    echo "------------------------------------"
     echo "1. Look for the Tailscale icon in your menu bar (top right)"
     echo "2. Click it and select 'Log in...'"
     echo "3. Sign in with Google, Microsoft, GitHub, or email"
     echo "4. Once connected, you'll see 'Connected' in the menu"
     echo ""
-    echo -e "${GREEN}After logging in, run this script again:${NC}"
+    echo "${green}After logging in, run this script again:${normal}"
     echo "curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash"
     echo ""
     
@@ -106,7 +132,7 @@ if ! check_tailscale_running; then
     
     # Check again
     if ! check_tailscale_running; then
-        echo -e "${RED}❌ Tailscale still not running${NC}"
+        echo "${red}X Tailscale still not running${normal}"
         echo "Please make sure you've:"
         echo "1. Opened the Tailscale app"
         echo "2. Logged in via the menu bar icon"
@@ -116,7 +142,7 @@ if ! check_tailscale_running; then
 fi
 
 # Get Tailscale status
-echo -e "${GREEN}✅ Tailscale is running!${NC}"
+echo "${green}✓ Tailscale is running!${normal}"
 
 # Get hostname
 TS_HOSTNAME=$(tailscale status --json 2>/dev/null | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('Self', {}).get('HostName', ''))" 2>/dev/null || echo "")
@@ -125,12 +151,12 @@ if [ -z "$TS_HOSTNAME" ]; then
     # Try to get hostname another way
     TS_HOSTNAME=$(hostname -s)
     
-    echo -e "${YELLOW}Setting Tailscale hostname to: $TS_HOSTNAME${NC}"
+    echo "${yellow}Setting Tailscale hostname to: $TS_HOSTNAME${normal}"
     
     # Try to set hostname
     if command_exists sudo; then
         sudo tailscale set --hostname "$TS_HOSTNAME" 2>/dev/null || {
-            echo -e "${YELLOW}Note: Could not set custom hostname${NC}"
+            echo "${yellow}Note: Could not set custom hostname${normal}"
         }
     fi
 fi
@@ -145,7 +171,7 @@ if [ -n "$TS_IP" ]; then
 fi
 
 echo ""
-echo -e "${BLUE}📲 Setting up Pocket IDE for Tailscale...${NC}"
+echo "${blue}Setting up Pocket IDE for Tailscale...${normal}"
 
 # Create enhanced directory structure
 POCKET_IDE_DIR="$HOME/.pocket-ide"
@@ -153,7 +179,7 @@ mkdir -p "$POCKET_IDE_DIR/bin"
 mkdir -p "$POCKET_IDE_DIR/config"
 
 # Download enhanced scripts
-echo -e "📥 Downloading enhanced scripts..."
+echo "Downloading enhanced scripts..."
 
 # Create the ultra-short command wrapper
 cat > "$POCKET_IDE_DIR/bin/pocket-quick.sh" << 'EOF'
@@ -184,20 +210,20 @@ case "${1:-d}" in
     r)  # Run
         shift
         tmux send-keys -t $SESSION:0.0 "$*" Enter
-        echo "✅ Sent: $*"
+        echo "[OK] Sent: $*"
         ;;
     c)  # Clear
         tmux send-keys -t $SESSION:0.0 "clear" Enter
         ;;
     k)  # Kill current process
         tmux send-keys -t $SESSION:0.0 C-c
-        echo "🛑 Interrupted"
+        echo "[!] Interrupted"
         ;;
     rs) # Restart Claude
         tmux send-keys -t $SESSION:0.0 C-c
         sleep 0.5
         tmux send-keys -t $SESSION:0.0 "claude" Enter
-        echo "🔄 Restarted Claude"
+        echo "[OK] Restarted Claude"
         ;;
     
     # Navigation
@@ -216,20 +242,20 @@ case "${1:-d}" in
     
     # Dashboard view
     d)  # Dashboard
-        echo "📊 POCKET IDE DASHBOARD"
-        echo "====================="
+        echo "POCKET IDE DASHBOARD"
+        echo "==================="
         echo ""
-        echo "🤖 Claude Status:"
+        echo "Claude Status:"
         if tmux capture-pane -t $SESSION:0.0 -p 2>/dev/null | tail -1 | grep -q "claude>"; then
-            echo "   ✅ Ready for input"
+            echo "   [OK] Ready for input"
         else
-            echo "   ⏳ Working..."
+            echo "   [...] Working"
             echo ""
             echo "Last output:"
             tmux capture-pane -t $SESSION:0.0 -p | tail -3 | sed 's/^/   /'
         fi
         echo ""
-        echo "📁 Current Directory:"
+        echo "Current Directory:"
         tmux capture-pane -t $SESSION:0.1 -p | grep -E "^[~/].*\$" | tail -1 | sed 's/\$.*//' | sed 's/^/   /'
         echo ""
         echo "Quick Commands:"
@@ -239,7 +265,7 @@ case "${1:-d}" in
     
     # Help
     h)  # Help
-        echo "🚀 POCKET IDE QUICK COMMANDS"
+        echo "POCKET IDE QUICK COMMANDS"
         echo ""
         echo "STATUS            ACTION            NAV"
         echo "s  - status       r <cmd> - run     1 - claude"
@@ -292,7 +318,8 @@ EOF
 chmod +x "$POCKET_IDE_DIR/bin/auto-attach.sh"
 
 # Update PATH and create aliases
-echo -e "\n📝 Setting up shortcuts..."
+echo ""
+echo "Setting up shortcuts..."
 
 # Create single-letter aliases
 for shell_rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
@@ -337,27 +364,27 @@ EOF
 
 # Show success message
 echo ""
-echo -e "${GREEN}✅ Tailscale upgrade complete!${NC}"
+echo "${green}${bold}Tailscale upgrade complete!${normal}"
 echo ""
-echo -e "${BLUE}📱 Mobile Setup Instructions:${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "${bold}Mobile Setup Instructions:${normal}"
+echo "-------------------------"
 echo ""
 echo "1. Install Tailscale on your phone:"
-echo "   • iOS: App Store"
-echo "   • Android: Play Store"
+echo "   - iOS: App Store"
+echo "   - Android: Play Store"
 echo ""
 echo "2. Login with the SAME account you used here"
 echo ""
 echo "3. In Termius, add new host:"
-echo "   • Hostname: ${GREEN}$TS_HOSTNAME${NC}"
-echo "   • Username: ${GREEN}$USER${NC}"
-echo "   • Port: 22"
+echo "   - Hostname: ${bold}$TS_HOSTNAME${normal}"
+echo "   - Username: ${bold}$USER${normal}"
+echo "   - Port: 22"
 echo ""
-echo -e "${BLUE}🎯 Ultra-short commands now available:${NC}"
-echo "   ${GREEN}s${NC} = status     ${GREEN}r${NC} = run command"
-echo "   ${GREEN}d${NC} = dashboard  ${GREEN}h${NC} = help"
+echo "${bold}Ultra-short commands now available:${normal}"
+echo "   ${bold}s${normal} = status     ${bold}r${normal} = run command"
+echo "   ${bold}d${normal} = dashboard  ${bold}h${normal} = help"
 echo ""
-echo -e "${YELLOW}⚡ Quick Test:${NC}"
-echo "Reload your shell and try: ${GREEN}d${NC}"
+echo "${yellow}Quick Test:${normal}"
+echo "Reload your shell and try: ${bold}d${normal}"
 echo ""
 echo "source ~/.zshrc"
