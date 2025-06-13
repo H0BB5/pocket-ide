@@ -8,6 +8,23 @@
 curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/install.sh | bash
 ```
 
+## 🌟 NEW: Tailscale Integration
+
+**Code from anywhere with ultra-short commands!** After installing Tailscale:
+
+```bash
+# Upgrade to Tailscale-enabled version
+curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash
+```
+
+Now use single-letter commands from your phone:
+- `s` - Show Claude status
+- `r "create a web app"` - Run command  
+- `d` - Dashboard view
+- `1`, `2`, `3` - Switch panes instantly
+
+[**Full Tailscale Setup Guide →**](guides/02-remote-access/tailscale.md)
+
 ## What is Pocket IDE?
 
 Pocket IDE is a guide for setting up a persistent, remotely accessible development environment that lets you continue working with your IDE and Claude Code from your smartphone. Perfect for those moments when you need to step away but want to keep your development momentum going.
@@ -18,9 +35,12 @@ Pocket IDE is a guide for setting up a persistent, remotely accessible developme
 - **Persistent Environment**: No setup/prep needed when switching devices - your environment is always ready
 - **Seamless Continuity**: Start a task on your desktop, check progress on your phone, return to find everything done
 
-## 🚀 Quick Start (Local Network Only)
+## 🏃 Quick Start (10 minutes)
 
-This gets you running in ~10 minutes on your home network:
+### Option A: Local Network Only (Quick Test)
+
+<details>
+<summary>Start coding from your phone in 10 minutes</summary>
 
 1. **Install Prerequisites**
    ```bash
@@ -45,301 +65,91 @@ This gets you running in ~10 minutes on your home network:
    ```
 
 4. **Find Your IP Address**
-   - macOS: Apple Menu → About This Mac → More Info → System Report → Network
-   - Or run: `ipconfig getifaddr en0`
-
-5. **Setup Mobile Access**
-   - Download [Termius](https://termius.com/) on your Mac and phone
-   - Add new host in Termius with your Mac's IP address
-   - Use your Mac username/password for SSH
-
-6. **Connect From Your Phone**
-   - Open Termius on your phone
-   - Connect to your Mac
-   - Run: `tmux attach -t vibecode`
-   - You're now controlling Claude Code from your phone! 🎉
-
-## 📖 Table of Contents
-
-- [Full Setup Guide](#full-setup-guide)
-  - [Local Network Setup](#local-network-setup)
-  - [Remote Access Setup](#remote-access-setup)
-  - [MCP Server Integration](#mcp-server-integration)
-  - [Mobile Optimizations](#mobile-optimizations)
-- [Advanced Features](#advanced-features)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-
-## Full Setup Guide
-
-### Local Network Setup
-
-<details>
-<summary>📋 Detailed Local Setup Instructions</summary>
-
-#### Prerequisites Check
-```bash
-# Check if you have required tools
-command -v brew >/dev/null 2>&1 || echo "❌ Homebrew not installed"
-command -v tmux >/dev/null 2>&1 || echo "❌ tmux not installed"
-command -v claude >/dev/null 2>&1 || echo "❌ Claude Code not installed"
-```
-
-#### Enhanced tmux Configuration
-Create `~/.tmux.conf`:
-```bash
-# Better mobile experience
-set -g mouse on
-set -g history-limit 10000
-
-# Larger text for mobile
-set -g status-left-length 30
-set -g status-right-length 60
-
-# Easy pane switching with Alt+Arrow
-bind -n M-Left select-pane -L
-bind -n M-Right select-pane -R
-bind -n M-Up select-pane -U
-bind -n M-Down select-pane -D
-```
-
-#### Persistent Session Script
-Create `~/start-pocket-ide.sh`:
-```bash
-#!/bin/bash
-SESSION="vibecode"
-
-# Check if session exists
-tmux has-session -t $SESSION 2>/dev/null
-
-if [ $? != 0 ]; then
-  # Create new session with two panes
-  tmux new-session -d -s $SESSION -n 'main'
-  
-  # Split horizontally
-  tmux split-window -h -t $SESSION:0
-  
-  # Left pane: Claude Code
-  tmux send-keys -t $SESSION:0.0 'claude' Enter
-  
-  # Right pane: Project directory
-  tmux send-keys -t $SESSION:0.1 'cd ~/projects && clear' Enter
-  
-  echo "✅ Pocket IDE session created!"
-else
-  echo "📱 Pocket IDE session already running!"
-fi
-
-# Show how to attach
-echo "To attach: tmux attach -t $SESSION"
-```
-
-Make it executable: `chmod +x ~/start-pocket-ide.sh`
-
-</details>
-
-### Remote Access Setup
-
-<details>
-<summary>🌐 Access from Anywhere (Not Just Home)</summary>
-
-#### Option 1: Tailscale (Recommended for Beginners)
-
-**Why Tailscale?**
-- ✅ Free for personal use
-- ✅ Works instantly through any network
-- ✅ No port forwarding needed
-- ✅ Encrypted end-to-end
-
-**Setup:**
-```bash
-# Install on Mac
-brew install tailscale
-
-# Start Tailscale
-sudo tailscale up
-
-# Get your Tailscale IP
-tailscale ip -4
-```
-
-**On your phone:**
-1. Install Tailscale app
-2. Login with same account
-3. Your Mac appears as a device
-4. Use Tailscale IP in Termius instead of local IP
-
-#### Option 2: Cloudflare Tunnel (Advanced)
-
-**Why Cloudflare?**
-- ✅ No app needed on phone
-- ✅ Can use custom domain
-- ✅ Works through any firewall
-- ❌ More complex setup
-
-**Setup Guide:** [Coming Soon - See Issue #2]
-
-#### Option 3: Quick Testing with ngrok
-
-```bash
-# Install ngrok
-brew install ngrok
-
-# Expose SSH (temporary URL)
-ngrok tcp 22
-```
-
-</details>
-
-### MCP Server Integration
-
-<details>
-<summary>🔗 Connect Claude Code to Your IDE</summary>
-
-**What is MCP?**
-Model Context Protocol lets Claude Code access your filesystem and tools.
-
-**Setup Steps:**
-
-1. **Configure Claude Desktop**
-   
-   Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
-   ```json
-   {
-     "mcpServers": {
-       "filesystem": {
-         "command": "npx",
-         "args": [
-           "-y",
-           "@modelcontextprotocol/server-filesystem",
-           "~/projects"
-         ]
-       }
-     }
-   }
-   ```
-
-2. **Install MCP Server**
    ```bash
-   npm install -g @modelcontextprotocol/server-filesystem
+   ipconfig getifaddr en0
    ```
 
-3. **Restart Claude Desktop**
-   - Quit Claude Desktop completely
-   - Reopen and check MCP connection icon
+5. **Connect From Your Phone**
+   - Download [Termius](https://termius.com/) on your phone
+   - Add host with your Mac's IP
+   - Connect and run: `tmux attach -t vibecode`
 
-4. **Test Integration**
+</details>
+
+### Option B: Access from Anywhere (Recommended)
+
+<details>
+<summary>Code from coffee shops, airports, anywhere with internet</summary>
+
+1. **Run the installer**
    ```bash
-   # In Claude Code, try:
-   # "Can you see the files in my projects folder?"
+   curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/install.sh | bash
    ```
 
-**Cursor Integration:** [Coming Soon - See Issue #3]
-
-</details>
-
-### Mobile Optimizations
-
-<details>
-<summary>📱 Better Mobile Experience</summary>
-
-#### Termius Settings
-1. **Keyboard Shortcuts**
-   - Settings → Keychain → Add useful shortcuts
-   - Map "Ctrl+C" to accessible button
-   - Add tmux prefix key as shortcut
-
-2. **Font Size**
-   - Settings → Appearance → Font Size: 14pt minimum
-
-3. **Color Scheme**
-   - Use high contrast theme
-   - Enable "Vibrant" colors
-
-#### tmux Mobile Commands
-```bash
-# Create mobile-friendly aliases
-echo "alias ta='tmux attach -t vibecode'" >> ~/.zshrc
-echo "alias tl='tmux list-sessions'" >> ~/.zshrc
-echo "alias tn='tmux new -s'" >> ~/.zshrc
-```
-
-#### Quick Actions Script
-Create `~/pocket-commands.sh`:
-```bash
-#!/bin/bash
-# Common commands for mobile
-
-case "$1" in
-  "status")
-    echo "=== Claude Status ==="
-    tmux capture-pane -t vibecode:0.0 -p | tail -20
-    ;;
-  "run")
-    shift
-    tmux send-keys -t vibecode:0.0 "$*" Enter
-    ;;
-  "clear")
-    tmux send-keys -t vibecode:0.0 "clear" Enter
-    ;;
-  *)
-    echo "Usage: pocket [status|run|clear]"
-    ;;
-esac
-```
-
-</details>
-
-## Advanced Features
-
-### 🔐 Security Hardening
-
-<details>
-<summary>Secure Your Setup</summary>
-
-1. **SSH Key Authentication**
+2. **Install Tailscale**
    ```bash
-   # Generate key pair
-   ssh-keygen -t ed25519 -C "pocket-ide"
-   
-   # Copy to Mac
-   ssh-copy-id -i ~/.ssh/id_ed25519 username@mac-ip
+   brew install tailscale
+   sudo tailscale up --hostname "pocket-mac"
    ```
 
-2. **Disable Password Auth**
-   Edit `/etc/ssh/sshd_config`:
-   ```
-   PasswordAuthentication no
-   PubkeyAuthentication yes
+3. **Upgrade for Tailscale**
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash
    ```
 
-3. **Change SSH Port**
-   ```
-   Port 2222  # Or any non-standard port
-   ```
+4. **Connect from anywhere**
+   - Install Tailscale on your phone
+   - In Termius, use hostname: `pocket-mac`
+   - Enjoy single-letter commands!
+
+[**Detailed Tailscale Guide →**](guides/02-remote-access/tailscale.md)
 
 </details>
 
-### 🔄 Persistent Connections
+## 📖 Complete Documentation
 
-<details>
-<summary>Never Lose Connection</summary>
+### Setup Guides
+- [Local Network Setup](guides/01-local-setup.md)
+- [**Tailscale Remote Access**](guides/02-remote-access/tailscale.md) 🌟 NEW
+- [Cloudflare Tunnel Setup](guides/02-remote-access/cloudflare-tunnel.md) (Coming Soon)
+- [MCP Server Integration](guides/03-mcp-integration.md)
+- [Mobile Optimizations](guides/04-mobile-optimization.md)
 
-**Using Mosh (Mobile Shell)**
+### Advanced Features
+- 🔐 [Security Hardening](#security-hardening)
+- 🔄 [Persistent Connections](#persistent-connections)  
+- 🎯 [Ultra-Short Commands](#ultra-short-commands)
+- 📱 [Mobile-First Interface](#mobile-first-interface)
+
+## 🎯 Ultra-Short Commands
+
+After Tailscale upgrade, use these from anywhere:
+
+| Command | Action | Example |
+|---------|--------|---------|
+| `s` | Show status | Just type `s` |
+| `r` | Run command | `r "create a todo app"` |
+| `d` | Dashboard | See everything at once |
+| `c` | Clear | Clear Claude's screen |
+| `k` | Kill | Stop current task |
+| `1` | Claude pane | Jump to Claude |
+| `2` | Terminal | Jump to terminal |
+| `h` | Help | Show all commands |
+
+## 📱 Mobile-First Interface
+
+New touch-friendly menu system:
+
 ```bash
-# Install mosh
-brew install mosh
-
-# Connect with mosh instead of SSH
-mosh username@ip -- tmux attach -t vibecode
+# After connecting via SSH
+pocket-menu  # Launch mobile interface
 ```
 
-Benefits:
-- Survives network changes
-- Handles high latency
-- Instant reconnection
-
-</details>
+Features:
+- Large touch targets
+- Visual status indicators
+- No special characters needed
+- Gesture-friendly navigation
 
 ## Troubleshooting
 
@@ -387,26 +197,29 @@ tmux new -s vibecode
 
 ## Roadmap
 
-### ✅ Phase 1: Local Network (Current)
+### ✅ Phase 1: Local Network
 - [x] Basic tmux + SSH setup
 - [x] Mobile access via Termius
 - [x] Persistent sessions
 
-### 🔄 Phase 2: Remote Access
-- [ ] Tailscale integration guide
+### ✅ Phase 2: Remote Access  
+- [x] Tailscale integration guide
+- [x] Ultra-short commands
+- [x] Mobile-optimized interface
 - [ ] Cloudflare Tunnel setup
-- [ ] Security best practices
+- [ ] Advanced security guide
 
 ### 🚧 Phase 3: Enhanced Integration
-- [ ] MCP server configuration
-- [ ] Cursor + Claude Code integration
-- [ ] Automated setup scripts
+- [ ] Full MCP server guide
+- [ ] Cursor + Claude Code bridge
+- [ ] Project templates
 
 ### 🔮 Phase 4: Advanced Features
-- [ ] Synology NAS setup guide
-- [ ] Multi-user environment
-- [ ] Container-based development
-- [ ] Voice control integration
+- [ ] Synology NAS setup
+- [ ] Multi-user support
+- [ ] Container-based setup
+- [ ] Voice commands
+- [ ] Mobile notifications
 
 ## Contributing
 
