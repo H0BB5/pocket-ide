@@ -8,6 +8,27 @@
 curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/install.sh | bash
 ```
 
+### 🎨 Prefer Beautiful Terminal Output?
+
+Try our enhanced installer with rich formatting:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/install-enhanced.py | python3
+```
+
+<details>
+<summary>What's different in the enhanced installer?</summary>
+
+- Beautiful progress bars and colored output
+- Interactive prompts with better UX
+- Automatic dependency installation
+- Cleaner error messages
+- Works great in modern terminals
+
+![Enhanced Installer Preview](assets/enhanced-installer.png)
+
+</details>
+
 ## 🌟 NEW: Tailscale Integration
 
 **Code from anywhere with ultra-short commands!** After installing Tailscale:
@@ -206,6 +227,8 @@ tmux new -s vibecode
 - [x] Tailscale integration guide
 - [x] Ultra-short commands
 - [x] Mobile-optimized interface
+- [x] Clean terminal output
+- [x] Enhanced installer with rich formatting
 - [ ] Cloudflare Tunnel setup
 - [ ] Advanced security guide
 
