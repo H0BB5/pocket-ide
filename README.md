@@ -65,11 +65,26 @@ After installation:
 | `r` | Run command | `r "build a game"` |
 | `d` | Dashboard | See everything |
 | `c` | Clear screen | Clean up |
-| `k` | Kill process | Stop Claude |
-| `1` | Go to Claude | Switch panes |
+| `k` | Kill process | Stop Claude (smart detection) |
+| `1` | Go to Claude | Switch panes (from terminal) |
 | `2` | Go to terminal | Switch panes |
 | `p` | Next pane | Cycle through |
 | `fix` | Diagnose & repair | Fix broken sessions |
+| `keys` | tmux key reference | When shortcuts don't work |
+
+## 🎮 Important: Pane Navigation
+
+**When Claude is active**, number shortcuts (1,2,3) won't work because input goes to Claude. Instead:
+
+### Use tmux native commands:
+- `Ctrl+b →` - Switch to right pane (terminal)
+- `Ctrl+b ←` - Switch to left pane (Claude)  
+- `Ctrl+b q` - Show pane numbers, then press number
+- `Ctrl+b z` - Zoom current pane (toggle full screen)
+
+💡 **Pro tip**: Switch to terminal pane first, then shortcuts work again!
+
+Type `keys` for full tmux reference.
 
 ## 🔧 Troubleshooting
 
@@ -79,14 +94,20 @@ Your tmux session structure is broken. Run:
 fix    # Diagnose and auto-repair
 ```
 
-### "sessions should be nested with care"
-This happens when trying to attach while already in tmux. Use:
-- `1`, `2`, `3` - Switch panes directly (after Tailscale upgrade)
-- `p` - Cycle to next pane
-- Or exit tmux first with `Ctrl+b d`
+### Can't use shortcuts while Claude is running
+- You're in the Claude pane - shortcuts go to Claude
+- Use `Ctrl+b →` to switch to terminal pane
+- Or `Ctrl+b q` then press `2` for terminal
+- Now shortcuts work again!
 
-### "Claude command not found"
-Download Claude Code from: https://claude.ai/download
+### "Claude is idle (nothing to interrupt)"
+- The `k` command detected Claude isn't running anything
+- This is normal - Claude is ready for new commands
+
+### "sessions should be nested with care"
+- You're trying to attach while already in tmux
+- Just use pane switching commands instead
+- Or exit tmux first with `Ctrl+b d`
 
 ### Can't connect from phone?
 1. Check SSH is enabled: System Preferences → Sharing → Remote Login
