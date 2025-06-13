@@ -2,6 +2,12 @@
 
 > Never interrupt your flow again. Code from anywhere - even the bathroom.
 
+## 🚀 One-Line Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/install.sh | bash
+```
+
 ## What is Pocket IDE?
 
 Pocket IDE is a guide for setting up a persistent, remotely accessible development environment that lets you continue working with your IDE and Claude Code from your smartphone. Perfect for those moments when you need to step away but want to keep your development momentum going.
