@@ -226,18 +226,48 @@ case "${1:-d}" in
         echo "[OK] Restarted Claude"
         ;;
     
-    # Navigation
+    # Navigation - Fixed for tmux nesting
     1)  # Claude pane
-        tmux select-pane -t $SESSION:0.0
-        tmux attach-session -t $SESSION
+        if [ -n "$TMUX" ]; then
+            # Already in tmux, just switch pane
+            tmux select-pane -t $SESSION:0.0
+        else
+            # Not in tmux, attach to session
+            tmux select-pane -t $SESSION:0.0
+            tmux attach-session -t $SESSION
+        fi
         ;;
     2)  # Terminal pane
-        tmux select-pane -t $SESSION:0.1
-        tmux attach-session -t $SESSION
+        if [ -n "$TMUX" ]; then
+            # Already in tmux, just switch pane
+            tmux select-pane -t $SESSION:0.1
+        else
+            # Not in tmux, attach to session
+            tmux select-pane -t $SESSION:0.1
+            tmux attach-session -t $SESSION
+        fi
         ;;
     3)  # Monitor window
-        tmux select-window -t $SESSION:1
-        tmux attach-session -t $SESSION
+        if [ -n "$TMUX" ]; then
+            # Already in tmux, just switch window
+            tmux select-window -t $SESSION:1
+        else
+            # Not in tmux, attach to session
+            tmux select-window -t $SESSION:1
+            tmux attach-session -t $SESSION
+        fi
+        ;;
+    
+    # Additional navigation helpers
+    p)  # Previous pane
+        if [ -n "$TMUX" ]; then
+            tmux select-pane -t :.+
+        else
+            echo "[!] Not in tmux session. Use 'pocket' to attach first."
+        fi
+        ;;
+    w)  # List windows
+        tmux list-windows -t $SESSION
         ;;
     
     # Dashboard view
@@ -260,7 +290,11 @@ case "${1:-d}" in
         echo ""
         echo "Quick Commands:"
         echo "   s=status  r=run  c=clear  k=kill"
-        echo "   1=claude  2=term  3=monitor  h=help"
+        echo "   1=claude  2=term  3=monitor  p=next-pane"
+        if [ -n "$TMUX" ]; then
+            echo ""
+            echo "   [You're in tmux - pane switching ready]"
+        fi
         ;;
     
     # Help
@@ -271,9 +305,16 @@ case "${1:-d}" in
         echo "s  - status       r <cmd> - run     1 - claude"
         echo "l  - last 10      c - clear         2 - terminal"
         echo "ll - last 50      k - kill process  3 - monitor"
-        echo "d  - dashboard    rs - restart      "
+        echo "d  - dashboard    rs - restart      p - next pane"
+        echo "                                    w - list windows"
         echo ""
         echo "Example: r 'create a hello world'"
+        echo ""
+        if [ -n "$TMUX" ]; then
+            echo "TIP: You're in tmux. Use numbers to switch panes directly."
+        else
+            echo "TIP: Run 'pocket' first to attach to the session."
+        fi
         ;;
     
     # Default to dashboard
@@ -340,6 +381,8 @@ alias k='~/.pocket-ide/bin/pocket-quick.sh k'
 alias rs='~/.pocket-ide/bin/pocket-quick.sh rs'
 alias d='~/.pocket-ide/bin/pocket-quick.sh d'
 alias h='~/.pocket-ide/bin/pocket-quick.sh h'
+alias p='~/.pocket-ide/bin/pocket-quick.sh p'
+alias w='~/.pocket-ide/bin/pocket-quick.sh w'
 
 # Number shortcuts for pane switching
 alias 1='~/.pocket-ide/bin/pocket-quick.sh 1'
@@ -383,6 +426,7 @@ echo ""
 echo "${bold}Ultra-short commands now available:${normal}"
 echo "   ${bold}s${normal} = status     ${bold}r${normal} = run command"
 echo "   ${bold}d${normal} = dashboard  ${bold}h${normal} = help"
+echo "   ${bold}p${normal} = next pane  ${bold}1/2/3${normal} = specific pane"
 echo ""
 echo "${yellow}Quick Test:${normal}"
 echo "Reload your shell and try: ${bold}d${normal}"
