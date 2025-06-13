@@ -12,31 +12,140 @@ echo ""
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Check if Tailscale is installed
-if ! command -v tailscale &> /dev/null; then
-    echo -e "${RED}❌ Tailscale not found${NC}"
-    echo "Install it first with: brew install tailscale"
-    exit 1
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to check if Tailscale GUI app is installed
+check_tailscale_app() {
+    if [ -d "/Applications/Tailscale.app" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to check if Tailscale is running
+check_tailscale_running() {
+    if tailscale status >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+echo "🔍 Checking Tailscale installation..."
+
+# Step 1: Check if Tailscale is properly installed and running
+if ! check_tailscale_running; then
+    echo -e "${YELLOW}⚠️  Tailscale is not running${NC}"
+    
+    # Check if Tailscale CLI is installed but not the app
+    if command_exists tailscale && ! check_tailscale_app; then
+        echo -e "${YELLOW}Found Tailscale CLI but not the GUI app${NC}"
+        echo "On macOS, you need the Tailscale app for the service to run."
+        echo ""
+        echo -e "${BLUE}Installing Tailscale app...${NC}"
+        
+        if command_exists brew; then
+            brew install --cask tailscale || {
+                echo -e "${RED}Failed to install Tailscale${NC}"
+                echo "Please install manually from: https://tailscale.com/download"
+                exit 1
+            }
+        else
+            echo -e "${RED}Homebrew not found${NC}"
+            echo "Please install Tailscale from: https://tailscale.com/download"
+            exit 1
+        fi
+    elif ! command_exists tailscale; then
+        # No Tailscale at all
+        echo -e "${YELLOW}Tailscale not found${NC}"
+        echo ""
+        echo -e "${BLUE}Installing Tailscale...${NC}"
+        
+        if command_exists brew; then
+            # Install both CLI and GUI
+            brew install tailscale
+            brew install --cask tailscale
+        else
+            echo -e "${RED}Homebrew not found${NC}"
+            echo "Please install Tailscale from: https://tailscale.com/download"
+            exit 1
+        fi
+    fi
+    
+    # Launch Tailscale app
+    echo ""
+    echo -e "${BLUE}Launching Tailscale app...${NC}"
+    open -a Tailscale 2>/dev/null || {
+        echo -e "${RED}Could not launch Tailscale app${NC}"
+        echo "Please open Tailscale manually from Applications"
+        exit 1
+    }
+    
+    echo ""
+    echo -e "${YELLOW}👆 IMPORTANT: Tailscale Setup Required${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "1. Look for the Tailscale icon in your menu bar (top right)"
+    echo "2. Click it and select 'Log in...'"
+    echo "3. Sign in with Google, Microsoft, GitHub, or email"
+    echo "4. Once connected, you'll see 'Connected' in the menu"
+    echo ""
+    echo -e "${GREEN}After logging in, run this script again:${NC}"
+    echo "curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash"
+    echo ""
+    
+    # Wait for user acknowledgment
+    echo "Press Enter after you've logged into Tailscale..."
+    read -r
+    
+    # Check again
+    if ! check_tailscale_running; then
+        echo -e "${RED}❌ Tailscale still not running${NC}"
+        echo "Please make sure you've:"
+        echo "1. Opened the Tailscale app"
+        echo "2. Logged in via the menu bar icon"
+        echo "3. See 'Connected' status"
+        exit 1
+    fi
 fi
 
 # Get Tailscale status
-TS_STATUS=$(tailscale status --json 2>/dev/null || echo "{}")
-if [ "$TS_STATUS" = "{}" ]; then
-    echo -e "${YELLOW}⚠️  Tailscale not running${NC}"
-    echo "Start it with: sudo tailscale up"
-    exit 1
-fi
+echo -e "${GREEN}✅ Tailscale is running!${NC}"
 
-# Get Tailscale hostname
-TS_HOSTNAME=$(tailscale status --json | grep -o '"Self":{[^}]*}' | grep -o '"HostName":"[^"]*"' | cut -d'"' -f4)
+# Get hostname
+TS_HOSTNAME=$(tailscale status --json 2>/dev/null | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('Self', {}).get('HostName', ''))" 2>/dev/null || echo "")
+
 if [ -z "$TS_HOSTNAME" ]; then
+    # Try to get hostname another way
     TS_HOSTNAME=$(hostname -s)
+    
+    echo -e "${YELLOW}Setting Tailscale hostname to: $TS_HOSTNAME${NC}"
+    
+    # Try to set hostname
+    if command_exists sudo; then
+        sudo tailscale set --hostname "$TS_HOSTNAME" 2>/dev/null || {
+            echo -e "${YELLOW}Note: Could not set custom hostname${NC}"
+        }
+    fi
 fi
 
-echo -e "${GREEN}✅ Tailscale detected${NC}"
 echo "   Hostname: $TS_HOSTNAME"
+echo "   Status: Connected"
+
+# Get Tailscale IP
+TS_IP=$(tailscale ip -4 2>/dev/null || echo "")
+if [ -n "$TS_IP" ]; then
+    echo "   Tailscale IP: $TS_IP"
+fi
+
+echo ""
+echo -e "${BLUE}📲 Setting up Pocket IDE for Tailscale...${NC}"
 
 # Create enhanced directory structure
 POCKET_IDE_DIR="$HOME/.pocket-ide"
@@ -44,7 +153,7 @@ mkdir -p "$POCKET_IDE_DIR/bin"
 mkdir -p "$POCKET_IDE_DIR/config"
 
 # Download enhanced scripts
-echo -e "\n📥 Downloading enhanced scripts..."
+echo -e "📥 Downloading enhanced scripts..."
 
 # Create the ultra-short command wrapper
 cat > "$POCKET_IDE_DIR/bin/pocket-quick.sh" << 'EOF'
@@ -221,24 +330,34 @@ done
 cat > "$POCKET_IDE_DIR/config/tailscale.conf" << EOF
 # Tailscale configuration for Pocket IDE
 TAILSCALE_HOSTNAME="$TS_HOSTNAME"
+TAILSCALE_IP="$TS_IP"
 TAILSCALE_ENABLED=true
 AUTO_ATTACH_ON_SSH=true
 EOF
 
-# Show SSH config for mobile
-echo -e "\n${GREEN}✅ Tailscale upgrade complete!${NC}"
+# Show success message
 echo ""
-echo "📱 For one-tap mobile access, add this to Termius:"
-echo "   Host: $TS_HOSTNAME"
-echo "   Username: $USER"
+echo -e "${GREEN}✅ Tailscale upgrade complete!${NC}"
 echo ""
-echo "Or for advanced users, add this SSH config:"
-echo "----------------------------------------"
-"$POCKET_IDE_DIR/bin/generate-ssh-config.sh"
-echo "----------------------------------------"
+echo -e "${BLUE}📱 Mobile Setup Instructions:${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "🎯 Ultra-short commands now available:"
-echo "   s = status     r = run command"
-echo "   d = dashboard  h = help"
+echo "1. Install Tailscale on your phone:"
+echo "   • iOS: App Store"
+echo "   • Android: Play Store"
 echo ""
-echo "Reload your shell: source ~/.zshrc"
+echo "2. Login with the SAME account you used here"
+echo ""
+echo "3. In Termius, add new host:"
+echo "   • Hostname: ${GREEN}$TS_HOSTNAME${NC}"
+echo "   • Username: ${GREEN}$USER${NC}"
+echo "   • Port: 22"
+echo ""
+echo -e "${BLUE}🎯 Ultra-short commands now available:${NC}"
+echo "   ${GREEN}s${NC} = status     ${GREEN}r${NC} = run command"
+echo "   ${GREEN}d${NC} = dashboard  ${GREEN}h${NC} = help"
+echo ""
+echo -e "${YELLOW}⚡ Quick Test:${NC}"
+echo "Reload your shell and try: ${GREEN}d${NC}"
+echo ""
+echo "source ~/.zshrc"
