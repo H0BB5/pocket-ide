@@ -18,7 +18,7 @@ d    # Dashboard - see everything
 s    # Status - what's Claude doing?
 r "your command"    # Run command
 
-1    # Jump to Claude
+1    # Jump to Claude (from terminal)
 2    # Jump to terminal  
 p    # Next pane (cycle)
 
@@ -27,6 +27,19 @@ k    # Kill/stop current task
 rs   # Restart Claude
 fix  # Diagnose & repair session
 ```
+
+## 🎮 When Claude is Active (Important!)
+
+When you're in the Claude pane and Claude is running, you can't use number shortcuts. Instead:
+
+### Use tmux commands:
+- `Ctrl+b` then `→` - Switch to right pane (terminal)
+- `Ctrl+b` then `←` - Switch to left pane (Claude)
+- `Ctrl+b` then `q` - Show pane numbers, press number to switch
+- `Ctrl+b` then `z` - Zoom current pane (full screen toggle)
+
+### Pro tip:
+Switch to terminal pane (2) first, THEN use shortcuts!
 
 ## 💡 Common Workflows
 
@@ -40,12 +53,12 @@ r "continue where I left off"
 ```bash
 s                    # Check if ready
 r "fix the login bug"
-1                    # Watch Claude work
+2                    # Switch to terminal (to keep shortcuts working!)
 ```
 
 ### Something stuck?
 ```bash
-k                    # Kill current task
+k                    # Kill current task (shows if Claude is idle)
 rs                   # Restart Claude
 r "try again"        # New command
 ```
@@ -65,47 +78,48 @@ pocket-ide start
 fix   # This will diagnose and repair
 ```
 
-**"sessions should be nested..."**
-- You're already in tmux!
-- Use `1`, `2`, `p` to switch
-- Or detach first: `Ctrl+b d`
+**Can't use shortcuts while Claude is active**
+- Use `Ctrl+b →` to switch to terminal pane
+- Or `Ctrl+b q` then press pane number
+- Then shortcuts work again!
 
-**Can't see output?**
-```bash
-s     # Show last 20 lines
-l     # Show last 10 lines  
-ll    # Show last 50 lines
-```
+**"Claude is idle (nothing to interrupt)"**
+- This means `k` found nothing to kill
+- Claude is ready for new commands
 
 **Lost?**
 ```bash
-h     # Show help
+h     # Show help with tmux tips
+keys  # Show tmux key reference
 d     # Dashboard view
-w     # List windows
 ```
 
 ## 🎯 Pro Tips
 
 1. **Set up Termius snippets:**
-   - `run` → `r `
-   - `status` → `s`
-   - `dash` → `d`
-   - `fix` → `fix`
+   - `run` → `r "`
+   - `switch` → `Ctrl+b →`
+   - `zoom` → `Ctrl+b z`
 
-2. **Quick reconnect:**
-   - Save host in Termius favorites
-   - Use Face ID/Touch ID
+2. **Better tmux navigation:**
+   - Learn `Ctrl+b` shortcuts
+   - Always switch to terminal pane for shortcuts
+   - Use `keys` command for reference
 
-3. **Better visibility:**
-   - Increase font size in Termius
-   - Use landscape mode
-   - Enable vibrant colors
+3. **Mobile optimizations:**
+   - Enable Termius keyboard toolbar
+   - Add Ctrl key to toolbar
+   - Use landscape mode for more space
 
-4. **Auto-repair on connect:**
-   - Add to Termius "Run Command": `d`
-   - Shows dashboard immediately
+4. **Quick status check:**
+   ```bash
+   d  # Dashboard shows everything at once
+   ```
 
 ---
-Remember: Less typing = more coding! 🚀
+Remember: 
+- Numbers work from terminal pane
+- Use `Ctrl+b` arrows when in Claude
+- Type `keys` for tmux reference
 
 **Something broken?** Just type `fix` 🔧
