@@ -1,0 +1,30 @@
+# Pocket IDE SSH Configuration Template
+# Copy this to ~/.ssh/config on your mobile device
+
+# One-tap connection to Pocket IDE
+Host pocket
+    HostName YOUR_TAILSCALE_HOSTNAME
+    User YOUR_USERNAME
+    Port 22
+    RequestTTY yes
+    # Auto-run dashboard on connect
+    RemoteCommand ~/.pocket-ide/bin/pocket-quick.sh d; exec bash -l
+    
+# Alternative: Direct to mobile menu
+Host pocket-menu
+    HostName YOUR_TAILSCALE_HOSTNAME
+    User YOUR_USERNAME
+    Port 22
+    RequestTTY yes
+    RemoteCommand ~/.pocket-ide/bin/pocket-mobile.sh
+    
+# Alternative: Direct attach to tmux
+Host pocket-tmux
+    HostName YOUR_TAILSCALE_HOSTNAME  
+    User YOUR_USERNAME
+    Port 22
+    RequestTTY yes
+    RemoteCommand tmux attach -t vibecode || tmux new -s vibecode
+
+# Pro tip: In Termius, you can save these as different hosts
+# and choose based on what you want to do
