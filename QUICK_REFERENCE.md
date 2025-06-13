@@ -28,6 +28,15 @@ rs   # Restart Claude
 fix  # Diagnose & repair session
 ```
 
+## 📱 Mobile-Friendly Pane Management
+
+```bash
+z    # Zoom current pane (fullscreen toggle)
+x    # Close current pane
+split h    # Split horizontally (new pane to the right)
+split v    # Split vertically (new pane below)
+```
+
 ## 🎮 When Claude is Active (Important!)
 
 When you're in the Claude pane and Claude is running, you can't use number shortcuts. Instead:
@@ -37,6 +46,7 @@ When you're in the Claude pane and Claude is running, you can't use number short
 - `Ctrl+b` then `←` - Switch to left pane (Claude)
 - `Ctrl+b` then `q` - Show pane numbers, press number to switch
 - `Ctrl+b` then `z` - Zoom current pane (full screen toggle)
+- `Ctrl+b` then `x` - Close current pane (confirm with `y`)
 
 ### Pro tip:
 Switch to terminal pane (2) first, THEN use shortcuts!
@@ -54,6 +64,19 @@ r "continue where I left off"
 s                    # Check if ready
 r "fix the login bug"
 2                    # Switch to terminal (to keep shortcuts working!)
+```
+
+### Need more screen space?
+```bash
+z                    # Zoom current pane to fullscreen
+# Work in fullscreen...
+z                    # Toggle back to split view
+```
+
+### Close extra panes
+```bash
+x                    # Close current pane
+# Or in terminal pane: exit
 ```
 
 ### Something stuck?
@@ -81,35 +104,42 @@ fix   # This will diagnose and repair
 **Can't use shortcuts while Claude is active**
 - Use `Ctrl+b →` to switch to terminal pane
 - Or `Ctrl+b q` then press pane number
+- Or use `z` to zoom out and see both panes
 - Then shortcuts work again!
 
 **"Claude is idle (nothing to interrupt)"**
 - This means `k` found nothing to kill
 - Claude is ready for new commands
 
+**Too many panes?**
+```bash
+x     # Close current pane
+# Or type: exit
+```
+
 **Lost?**
 ```bash
-h     # Show help with tmux tips
+h     # Show help with all commands
 keys  # Show tmux key reference
 d     # Dashboard view
 ```
 
 ## 🎯 Pro Tips
 
-1. **Set up Termius snippets:**
-   - `run` → `r "`
-   - `switch` → `Ctrl+b →`
-   - `zoom` → `Ctrl+b z`
+1. **Mobile Screen Space:**
+   - Use `z` liberally to focus on one pane
+   - Close unnecessary panes with `x`
+   - Use landscape mode when possible
 
-2. **Better tmux navigation:**
+2. **Set up Termius snippets:**
+   - `run` → `r "`
+   - `zoom` → `z`
+   - `switch` → `2`
+
+3. **Better tmux navigation:**
    - Learn `Ctrl+b` shortcuts
    - Always switch to terminal pane for shortcuts
    - Use `keys` command for reference
-
-3. **Mobile optimizations:**
-   - Enable Termius keyboard toolbar
-   - Add Ctrl key to toolbar
-   - Use landscape mode for more space
 
 4. **Quick status check:**
    ```bash
@@ -118,6 +148,8 @@ d     # Dashboard view
 
 ---
 Remember: 
+- `z` for zoom (fullscreen toggle)
+- `x` to close panes
 - Numbers work from terminal pane
 - Use `Ctrl+b` arrows when in Claude
 - Type `keys` for tmux reference

@@ -286,6 +286,52 @@ case "${1:-d}" in
         fi
         ;;
     
+    # Pane management
+    close|x)  # Close current pane
+        if [ -n "$TMUX" ]; then
+            # Get current pane info
+            current_pane=$(tmux display-message -p '#P')
+            pane_count=$(tmux list-panes -t $SESSION:0 | wc -l)
+            
+            if [ "$pane_count" -le 1 ]; then
+                echo "[!] Cannot close the last pane!"
+                echo "    Use 'exit' to end the session"
+            else
+                echo "Closing current pane..."
+                tmux kill-pane
+                echo "[OK] Pane closed"
+                
+                # Check if we still have proper structure
+                new_pane_count=$(tmux list-panes -t $SESSION:0 2>/dev/null | wc -l || echo 0)
+                if [ "$new_pane_count" -lt 2 ]; then
+                    echo "[i] Session structure altered. Run 'fix' to restore."
+                fi
+            fi
+        else
+            echo "[!] Not in tmux. Use 'pocket' to attach first."
+        fi
+        ;;
+    
+    split)  # Split window
+        if [ -n "$TMUX" ]; then
+            case "${2:-h}" in
+                h|horizontal)
+                    tmux split-window -h -c "#{pane_current_path}"
+                    echo "[OK] Split horizontally"
+                    ;;
+                v|vertical)
+                    tmux split-window -v -c "#{pane_current_path}"
+                    echo "[OK] Split vertically"
+                    ;;
+                *)
+                    echo "Usage: split [h|v]"
+                    ;;
+            esac
+        else
+            echo "[!] Not in tmux. Use 'pocket' to attach first."
+        fi
+        ;;
+    
     # Navigation - Fixed for tmux nesting
     1)  # Claude pane
         if pane_exists "$SESSION:0.0"; then
@@ -336,6 +382,21 @@ case "${1:-d}" in
         ;;
     w)  # List windows
         tmux list-windows -t $SESSION 2>/dev/null || echo "[!] No session found"
+        ;;
+    
+    # Zoom toggle
+    z|zoom)  # Toggle zoom on current pane
+        if [ -n "$TMUX" ]; then
+            tmux resize-pane -Z
+            # Check if zoomed
+            if tmux list-panes -F '#F' | grep -q Z; then
+                echo "[OK] Pane zoomed (fullscreen)"
+            else
+                echo "[OK] Pane unzoomed"
+            fi
+        else
+            echo "[!] Not in tmux. Use 'pocket' to attach first."
+        fi
         ;;
     
     # Show current directory
@@ -409,7 +470,7 @@ case "${1:-d}" in
         echo ""
         echo "Quick Commands:"
         echo "   s=status  r=run  c=clear  k=kill"
-        echo "   1=claude  2=term  3=monitor  p=next-pane"
+        echo "   1=claude  2=term  z=zoom  x=close"
         echo "   fix=diagnose  rs=restart"
         if [ -n "$TMUX" ]; then
             echo ""
@@ -439,18 +500,55 @@ case "${1:-d}" in
         echo "l  - last 10      c - clear         2 - terminal"
         echo "ll - last 50      k - kill process  3 - monitor"
         echo "d  - dashboard    rs - restart      p - next pane"
-        echo "fix - diagnose                     w - list windows"
-        echo "pwd - show dir    cd - change dir"
+        echo "fix - diagnose    split - new pane  w - list windows"
+        echo "pwd - show dir    cd - change dir   z - zoom toggle"
+        echo "                  x/close - close   "
         echo ""
         echo "Example: r 'create a hello world'"
         echo ""
+        echo "MOBILE TIPS:"
+        echo "• Use 'z' to zoom current pane (fullscreen)"
+        echo "• Use 'x' to close current pane"
+        echo "• Use 'split h' or 'split v' for new panes"
+        echo ""
         if [ -n "$TMUX" ]; then
-            echo "TIP: You're in tmux. Use numbers to switch panes directly."
+            echo "TIP: You're in tmux. All commands ready!"
         else
             echo "TIP: Run 'pocket' first to attach to the session."
         fi
         echo ""
         echo "Session broken? Run 'fix' to diagnose and repair."
+        ;;
+    
+    # Tmux key reference
+    keys)
+        echo "TMUX KEY REFERENCE"
+        echo "=================="
+        echo ""
+        echo "All commands start with Ctrl+b, then:"
+        echo ""
+        echo "PANES:"
+        echo "  →/←/↑/↓ - Switch panes"
+        echo "  q       - Show pane numbers"
+        echo "  x       - Close current pane"
+        echo "  z       - Toggle zoom (fullscreen)"
+        echo "  %       - Split vertically"
+        echo "  \"       - Split horizontally"
+        echo ""
+        echo "WINDOWS:"
+        echo "  c       - Create new window"
+        echo "  n/p     - Next/previous window"
+        echo "  0-9     - Switch to window #"
+        echo "  ,       - Rename window"
+        echo ""
+        echo "SESSION:"
+        echo "  d       - Detach from session"
+        echo "  s       - List sessions"
+        echo ""
+        echo "MOBILE-FRIENDLY ALTERNATIVES:"
+        echo "  Use 'x' instead of Ctrl+b x"
+        echo "  Use 'z' instead of Ctrl+b z"
+        echo "  Use '1','2','3' for pane switching"
         ;;
     
     # Default to dashboard
@@ -520,6 +618,9 @@ alias h='~/.pocket-ide/bin/pocket-quick.sh h'
 alias p='~/.pocket-ide/bin/pocket-quick.sh p'
 alias w='~/.pocket-ide/bin/pocket-quick.sh w'
 alias fix='~/.pocket-ide/bin/pocket-quick.sh fix'
+alias z='~/.pocket-ide/bin/pocket-quick.sh z'
+alias x='~/.pocket-ide/bin/pocket-quick.sh x'
+alias keys='~/.pocket-ide/bin/pocket-quick.sh keys'
 
 # Number shortcuts for pane switching
 alias 1='~/.pocket-ide/bin/pocket-quick.sh 1'

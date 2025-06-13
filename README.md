@@ -73,7 +73,7 @@ After installation:
 
 ### After Basic Install
 | Command | What it does |
-|---------|------------|
+|---------|-------------|
 | `pocket-ide start` | Start/attach to session (in current directory) |
 | `pocket status` | Check Claude status |
 | `pocket run 'cmd'` | Send command to Claude |
@@ -91,6 +91,9 @@ After installation:
 | `p` | Next pane | Cycle through |
 | `pwd` | Show working directory | Check where you are |
 | `cd` | Change directory in terminal | `cd ../other-project` |
+| `z` | Toggle zoom (fullscreen) | Focus on one pane |
+| `x` | Close current pane | Remove pane |
+| `split` | Split window | `split h` or `split v` |
 | `fix` | Diagnose & repair | Fix broken sessions |
 | `keys` | tmux key reference | When shortcuts don't work |
 
