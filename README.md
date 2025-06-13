@@ -2,267 +2,107 @@
 
 > Never interrupt your flow again. Code from anywhere - even the bathroom.
 
-## 🚀 One-Line Install
+## 🚀 Quick Start
+
+### Step 1: Basic Install (5 minutes)
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/install.sh | bash
 ```
 
-### 🎨 Prefer Beautiful Terminal Output?
+This gives you:
+- ✅ Local network access (connect from phone while at home)
+- ✅ Basic commands: `pocket status`, `pocket run 'command'`
+- ✅ Persistent tmux sessions
 
-Try our enhanced installer with rich formatting:
+### Step 2: Enable Remote Access (2 minutes)
 
-```bash
-curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/install-enhanced.py | python3
-```
-
-<details>
-<summary>What's different in the enhanced installer?</summary>
-
-- Beautiful progress bars and colored output
-- Interactive prompts with better UX
-- Automatic dependency installation
-- Cleaner error messages
-- Works great in modern terminals
-
-![Enhanced Installer Preview](assets/enhanced-installer.png)
-
-</details>
-
-## 🌟 NEW: Tailscale Integration
-
-**Code from anywhere with ultra-short commands!** After installing Tailscale:
+Want to code from coffee shops, airports, or anywhere? Add Tailscale:
 
 ```bash
-# Upgrade to Tailscale-enabled version
 curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash
 ```
 
-Now use single-letter commands from your phone:
-- `s` - Show Claude status
-- `r "create a web app"` - Run command  
-- `d` - Dashboard view
-- `1`, `2`, `3` - Switch panes instantly
+This adds:
+- 🌐 Access from anywhere with internet
+- ⚡ Ultra-short commands: `s`, `r`, `d` (instead of typing long commands)
+- 🔐 Secure encrypted connection
+- 📱 Better mobile experience
 
-[**Full Tailscale Setup Guide →**](guides/02-remote-access/tailscale.md)
+## 📱 Mobile Setup
 
-## What is Pocket IDE?
+After installation:
 
-Pocket IDE is a guide for setting up a persistent, remotely accessible development environment that lets you continue working with your IDE and Claude Code from your smartphone. Perfect for those moments when you need to step away but want to keep your development momentum going.
+1. **Install on your phone:**
+   - [Termius](https://termius.com/) - SSH client
+   - [Tailscale](https://tailscale.com/download) - If you did Step 2
 
-### 🎯 Primary Use Cases
+2. **Connect from Termius:**
+   - **Local only**: Use your Mac's IP (find with `ipconfig getifaddr en0`)
+   - **With Tailscale**: Use your hostname (e.g., `pocket-mac`)
 
-- **Quick Tasks on the Go**: Step away for a bathroom break or errand? Continue running Claude tasks from your phone
-- **Persistent Environment**: No setup/prep needed when switching devices - your environment is always ready
-- **Seamless Continuity**: Start a task on your desktop, check progress on your phone, return to find everything done
-
-## 🏃 Quick Start (10 minutes)
-
-### Option A: Local Network Only (Quick Test)
-
-<details>
-<summary>Start coding from your phone in 10 minutes</summary>
-
-1. **Install Prerequisites**
+3. **Start coding!**
    ```bash
-   # Install Homebrew (if not installed)
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   
-   # Install tmux
-   brew install tmux
+   pocket    # Attach to session
+   d         # Show dashboard
+   r "create a web app"  # Run command
    ```
 
-2. **Install Development Tools**
-   - Download [Cursor](https://cursor.sh/) (or your preferred IDE)
-   - Install [Claude Desktop](https://claude.ai/download) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
+## ⚡ Command Reference
 
-3. **Start Your Persistent Session**
-   ```bash
-   # Create a new tmux session
-   tmux new -s vibecode
-   
-   # Inside tmux, start Claude Code
-   claude
-   ```
+### After Basic Install
+| Command | What it does |
+|---------|--------------|
+| `pocket-ide start` | Start/attach to session |
+| `pocket status` | Check Claude status |
+| `pocket run 'cmd'` | Send command to Claude |
 
-4. **Find Your IP Address**
-   ```bash
-   ipconfig getifaddr en0
-   ```
-
-5. **Connect From Your Phone**
-   - Download [Termius](https://termius.com/) on your phone
-   - Add host with your Mac's IP
-   - Connect and run: `tmux attach -t vibecode`
-
-</details>
-
-### Option B: Access from Anywhere (Recommended)
-
-<details>
-<summary>Code from coffee shops, airports, anywhere with internet</summary>
-
-1. **Run the installer**
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/install.sh | bash
-   ```
-
-2. **Install Tailscale**
-   ```bash
-   brew install tailscale
-   sudo tailscale up --hostname "pocket-mac"
-   ```
-
-3. **Upgrade for Tailscale**
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash
-   ```
-
-4. **Connect from anywhere**
-   - Install Tailscale on your phone
-   - In Termius, use hostname: `pocket-mac`
-   - Enjoy single-letter commands!
-
-[**Detailed Tailscale Guide →**](guides/02-remote-access/tailscale.md)
-
-</details>
-
-## 📖 Complete Documentation
-
-### Setup Guides
-- [Local Network Setup](guides/01-local-setup.md)
-- [**Tailscale Remote Access**](guides/02-remote-access/tailscale.md) 🌟 NEW
-- [Cloudflare Tunnel Setup](guides/02-remote-access/cloudflare-tunnel.md) (Coming Soon)
-- [MCP Server Integration](guides/03-mcp-integration.md)
-- [Mobile Optimizations](guides/04-mobile-optimization.md)
-
-### Advanced Features
-- 🔐 [Security Hardening](#security-hardening)
-- 🔄 [Persistent Connections](#persistent-connections)  
-- 🎯 [Ultra-Short Commands](#ultra-short-commands)
-- 📱 [Mobile-First Interface](#mobile-first-interface)
-
-## 🎯 Ultra-Short Commands
-
-After Tailscale upgrade, use these from anywhere:
-
-| Command | Action | Example |
-|---------|--------|---------|
+### After Tailscale Upgrade (Ultra-Short)
+| Command | What it does | Example |
+|---------|--------------|---------|
 | `s` | Show status | Just type `s` |
-| `r` | Run command | `r "create a todo app"` |
-| `d` | Dashboard | See everything at once |
-| `c` | Clear | Clear Claude's screen |
-| `k` | Kill | Stop current task |
-| `1` | Claude pane | Jump to Claude |
-| `2` | Terminal | Jump to terminal |
-| `h` | Help | Show all commands |
+| `r` | Run command | `r "build a game"` |
+| `d` | Dashboard | See everything |
+| `c` | Clear screen | Clean up |
+| `k` | Kill process | Stop Claude |
+| `1` | Go to Claude | Switch panes |
+| `2` | Go to terminal | Switch panes |
+| `p` | Next pane | Cycle through |
 
-## 📱 Mobile-First Interface
+## 🔧 Troubleshooting
 
-New touch-friendly menu system:
+### "sessions should be nested with care"
+This happens when trying to attach while already in tmux. Use:
+- `1`, `2`, `3` - Switch panes directly (after Tailscale upgrade)
+- `p` - Cycle to next pane
+- Or exit tmux first with `Ctrl+b d`
 
-```bash
-# After connecting via SSH
-pocket-menu  # Launch mobile interface
-```
+### "Claude command not found"
+Download Claude Code from: https://claude.ai/download
 
-Features:
-- Large touch targets
-- Visual status indicators
-- No special characters needed
-- Gesture-friendly navigation
+### Can't connect from phone?
+1. Check SSH is enabled: System Preferences → Sharing → Remote Login
+2. If using Tailscale, make sure it's running on both devices
+3. Try: `ssh username@hostname` to test connection
 
-## Troubleshooting
+## 🎯 What is Pocket IDE?
 
-### Common Issues
+Pocket IDE lets you run Claude Code on your Mac and control it from your phone. Perfect for:
+- Quick tasks during breaks
+- Checking progress while away
+- Starting long-running tasks remotely
 
-<details>
-<summary>🔧 Connection Problems</summary>
+Your development environment stays persistent - start a task on desktop, check it from your phone, come back to see it completed.
 
-**"Connection Refused"**
-- Check if SSH is enabled: System Preferences → Sharing → Remote Login
-- Verify IP address is correct
-- Check firewall settings
+## 📚 Advanced Guides
 
-**"tmux session not found"**
-```bash
-# List all sessions
-tmux ls
-
-# Create new session if needed
-tmux new -s vibecode
-```
-
-**"Permission Denied"**
-- Verify username/password
-- Check SSH logs: `sudo log show --predicate 'process == "sshd"' --last 5m`
-
-</details>
-
-<details>
-<summary>🔧 Claude Code Issues</summary>
-
-**"Claude command not found"**
-1. Ensure Claude Code is installed
-2. Add to PATH if needed:
-   ```bash
-   echo 'export PATH="$PATH:/path/to/claude"' >> ~/.zshrc
-   ```
-
-**"MCP Connection Failed"**
-1. Check config file syntax
-2. Restart Claude Desktop
-3. Check MCP server logs
-
-</details>
-
-## Roadmap
-
-### ✅ Phase 1: Local Network
-- [x] Basic tmux + SSH setup
-- [x] Mobile access via Termius
-- [x] Persistent sessions
-
-### ✅ Phase 2: Remote Access  
-- [x] Tailscale integration guide
-- [x] Ultra-short commands
-- [x] Mobile-optimized interface
-- [x] Clean terminal output
-- [x] Enhanced installer with rich formatting
-- [ ] Cloudflare Tunnel setup
-- [ ] Advanced security guide
-
-### 🚧 Phase 3: Enhanced Integration
-- [ ] Full MCP server guide
-- [ ] Cursor + Claude Code bridge
-- [ ] Project templates
-
-### 🔮 Phase 4: Advanced Features
-- [ ] Synology NAS setup
-- [ ] Multi-user support
-- [ ] Container-based setup
-- [ ] Voice commands
-- [ ] Mobile notifications
-
-## Contributing
-
-Found a better way? Have questions? Contributions welcome!
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## Support
-
-- 🐛 [Report Issues](https://github.com/H0BB5/pocket-ide/issues)
-- 💬 [Discussions](https://github.com/H0BB5/pocket-ide/discussions)
-- 📧 Contact: [your-email]
+- [MCP Integration](guides/03-mcp-integration.md) - Connect Claude to your files
+- [Security Setup](guides/security.md) - SSH keys and hardening
+- [Tailscale Details](guides/02-remote-access/tailscale.md) - Deep dive
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details
+MIT License - see [LICENSE](LICENSE) file
 
 ---
 
