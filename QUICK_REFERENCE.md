@@ -1,106 +1,90 @@
-# 📱 Pocket IDE Quick Reference
+# 📱 Pocket IDE Mobile Cheatsheet
 
-Save this on your phone for instant access!
+## 🚀 Connect
 
-## 🚀 Connection
+**In Termius:**
+- Host: `pocket-mac` (or your hostname)
+- Username: your-mac-username
 
-### Termius Quick Connect
-```
-Host: pocket-mac
-User: your-username
-```
-
-### Or via command line:
+**First command after connecting:**
 ```bash
-ssh pocket
+pocket  # Attach to session
 ```
 
-## ⚡ Ultra-Short Commands
+## ⚡ Essential Commands
 
-| Cmd | Action | Example |
-|-----|--------|---------|
-| `s` | Status | `s` |
-| `r` | Run | `r "make a game"` |
-| `d` | Dashboard | `d` |
-| `c` | Clear | `c` |
-| `k` | Kill task | `k` |
-| `rs` | Restart Claude | `rs` |
-| `h` | Help | `h` |
-
-## 🔢 Quick Navigation
-
-- `1` - Jump to Claude
-- `2` - Jump to Terminal  
-- `3` - Monitor window
-
-## 📱 Mobile Tips
-
-### Termius Shortcuts
-1. Settings → Keychain → New Snippet
-2. Add these:
-   - Name: "Run", Content: `r `
-   - Name: "Status", Content: `s`
-   - Name: "Dashboard", Content: `d`
-
-### Touch Gestures
-- **Swipe right**: Show keyboard
-- **Two-finger tap**: Paste
-- **Pinch**: Zoom
-
-## 🆘 Troubleshooting
-
-### Session died?
 ```bash
-pocket-ide start
+d    # Dashboard - see everything
+s    # Status - what's Claude doing?
+r "your command"    # Run command
+
+1    # Jump to Claude
+2    # Jump to terminal  
+p    # Next pane (cycle)
+
+c    # Clear screen
+k    # Kill/stop current task
+rs   # Restart Claude
 ```
 
-### Claude not responding?
+## 💡 Common Workflows
+
+### Morning check-in
 ```bash
-rs  # Restart Claude
+d                    # See dashboard
+r "continue where I left off"
 ```
 
-### Can't connect?
-1. Check Tailscale: `tailscale status`
-2. Restart SSH on Mac
-3. Check WiFi/cellular
-
-## 🎯 Pro Workflow
-
-### Morning Routine
-1. Open Termius
-2. Tap "pocket" host
-3. Type `d` (see dashboard)
-4. Type `r "continue where I left off"`
-
-### Bathroom Break™
-1. Connect
-2. Type `s` (quick status)
-3. If done, type `r "next task"`
-4. Disconnect, wash hands 🧼
-
-### Coffee Shop Session
-1. Enable Tailscale
-2. Connect to pocket
-3. Type `1` for Claude
-4. Work normally
-
-## 💡 Power User Tips
-
-### Auto-Dashboard on Connect
-In Termius:
-- Host Settings → Run Command
-- Enter: `d`
-
-### Voice Commands (iOS)
-1. Create Siri Shortcut
-2. "Hey Siri, check Claude"
-3. Opens Termius → pocket
-
-### Quick Copy Output
+### Quick task
 ```bash
-s | pbcopy  # Copy status to clipboard
+s                    # Check if ready
+r "fix the login bug"
+1                    # Watch Claude work
 ```
+
+### Something stuck?
+```bash
+k                    # Kill current task
+rs                   # Restart Claude
+r "try again"        # New command
+```
+
+## 🔧 Fix Common Issues
+
+**"sessions should be nested..."**
+- You're already in tmux!
+- Use `1`, `2`, `p` to switch
+- Or detach first: `Ctrl+b d`
+
+**Can't see output?**
+```bash
+s     # Show last 20 lines
+l     # Show last 10 lines  
+ll    # Show last 50 lines
+```
+
+**Lost?**
+```bash
+h     # Show help
+d     # Dashboard view
+w     # List windows
+```
+
+## 🎯 Pro Tips
+
+1. **Set up Termius snippets:**
+   - `run` → `r `
+   - `status` → `s`
+   - `dash` → `d`
+
+2. **Quick reconnect:**
+   - Save host in Termius favorites
+   - Use Face ID/Touch ID
+
+3. **Better visibility:**
+   - Increase font size in Termius
+   - Use landscape mode
+   - Enable vibrant colors
 
 ---
-
-**Remember**: The best code is written from the most comfortable position 🚽💻
+Remember: Less typing = more coding! 🚀
