@@ -8,6 +8,12 @@ echo "🚀 Pocket IDE Quick Installer"
 echo "============================"
 echo ""
 
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
 # Check OS
 if [[ "$OSTYPE" != "darwin"* ]]; then
     echo "⚠️  This script is designed for macOS"
@@ -64,6 +70,8 @@ if ! command -v claude &> /dev/null; then
     echo "⚠️  Claude Code not found"
     echo "   Download from: https://claude.ai/download"
     echo "   You can still use Pocket IDE, but you'll need to start Claude manually"
+else
+    echo "✅ Claude Code is installed"
 fi
 
 # Backup existing tmux config if it exists
@@ -77,20 +85,36 @@ echo "⚙️  Setting up tmux configuration..."
 cp "$HOME/.tmux.conf.pocket-ide" "$HOME/.tmux.conf"
 
 echo ""
-echo "✅ Pocket IDE installed successfully!"
+echo -e "${GREEN}✅ Pocket IDE installed successfully!${NC}"
+echo ""
+echo -e "${BLUE}🏠 LOCAL NETWORK SETUP COMPLETE${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "🎯 Quick Start:"
 echo "   pocket-ide start    # Start or attach to session"
-echo "   pocket status       # Check Claude status from mobile"
+echo "   pocket status       # Check Claude status"
 echo "   pocket run 'cmd'    # Send command to Claude"
 echo ""
-echo "📱 Mobile Setup:"
+echo "📱 Mobile Setup (Local Network Only):"
 echo "   1. Download Termius on your phone"
 echo "   2. Find your Mac's IP: ipconfig getifaddr en0"
 echo "   3. Add your Mac as a host in Termius"
 echo "   4. Connect and run: tmux attach -t vibecode"
 echo ""
+echo -e "${YELLOW}🌐 WANT TO ACCESS FROM ANYWHERE?${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Enable remote access with Tailscale (recommended):"
+echo ""
+echo -e "${GREEN}curl -sSL https://raw.githubusercontent.com/H0BB5/pocket-ide/main/scripts/tailscale-upgrade.sh | bash${NC}"
+echo ""
+echo "This adds:"
+echo "  • Access from anywhere (coffee shops, cellular, etc)"
+echo "  • Ultra-short commands (s, r, d, etc)"
+echo "  • Better mobile experience"
+echo "  • Secure encrypted connections"
+echo ""
 echo "📚 Full documentation: https://github.com/H0BB5/pocket-ide"
 echo ""
-echo "Need to reload your shell for PATH changes:"
+echo -e "${YELLOW}Don't forget to reload your shell:${NC}"
 echo "   source ~/.zshrc"
